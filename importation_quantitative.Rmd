@@ -29,9 +29,18 @@ essai pour réaliser le fond de carte centré sur l'amérique latine
 
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
-st_crs(world)
-  world %>% filter(brk_name == "South America") %>% ggplot()+geom_sf()
+amerique_dta <- world  %>% filter(name == '')
+st_crs(amerique_dta)
+amerique_dta%>% ggplot() + geom_sf()
 
 
+```
+```{r}
+library("sf")
+library("rnaturalearth")
+library("rnaturalearthdata")
+world <- ne_countries(scale = "medium", returnclass = "sf")
+st_crs(world )
+world %>%   filter(brk_name == "United States") %>% st_transform(crs = 2163) %>% ggplot() + geom_sf()
 ```
 
