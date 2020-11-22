@@ -4,6 +4,12 @@ author: "Junyi"
 date: "22/11/2020"
 output: html_document
 ---
+```{r}
+library("sf")
+library("ggplot2")
+library("rnaturalearth")
+library("rnaturalearthdata")
+```
 
 ```{r}
 setwd("C:/Users/mimi/Desktop/M2/Visualisation de données/PROJET/Dataset")
@@ -17,5 +23,15 @@ dim(community)
 str(occurrence)
 str(quantitative)
 str(community)
+```
+
+essai pour réaliser le fond de carte centré sur l'amérique latine 
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+st_crs(world)
+  world %>% filter(brk_name == "South America") %>% ggplot()+geom_sf()
+
+
 ```
 
