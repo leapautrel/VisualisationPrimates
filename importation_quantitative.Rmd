@@ -1,0 +1,21 @@
+---
+title: "primates"
+author: "Junyi"
+date: "22/11/2020"
+output: html_document
+---
+
+```{r}
+setwd("C:/Users/mimi/Desktop/M2/Visualisation de données/PROJET/Dataset")
+quantitative <- read.csv("ATLANTIC-PR_Quantitative.csv", header = TRUE, sep = ";")
+occurrence <- read.csv("ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
+community <- read.csv("ATLANTIC-PR_Community.csv", header = TRUE, sep = ";")
+dim(quantitative)
+dim(occurrence)
+dim(community)
+
+str(occurrence)
+str(quantitative)
+str(community)
+```
+
