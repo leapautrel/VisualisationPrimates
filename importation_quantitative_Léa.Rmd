@@ -5,10 +5,12 @@ output: html_document
 ---
 ```{r}
 rm(list=ls())
-library("sf")
-library("ggplot2")
+library("ggplot2") ; theme_set(theme_minimal())
+library("ggmap")
+library("dplyr") ; options(dplyr.summarise.inform = FALSE)
 library("rnaturalearth")
 library("rnaturalearthdata")
+library(RColorBrewer)
 ```
 
 ```{r}
@@ -16,17 +18,19 @@ quantitative <- read.csv("./Dataset/ATLANTIC-PR_Quantitative.csv", header = TRUE
 occurrence <- read.csv("./Dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
 community <- read.csv("./Dataset/ATLANTIC-PR_Community.csv", header = TRUE, sep = ";")
 
-print("occurence")
-dim(occurrence)
-str(occurrence)
+occurrence$SPECIES <- as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES)) # Enlève les espaces superflus
 
-print("quantitative")
-dim(quantitative)
-str(quantitative)
-
-print("community")
-dim(community)
-str(community)
+# print("occurence")
+# dim(occurrence)
+# str(occurrence)
+# 
+# print("quantitative")
+# dim(quantitative)
+# str(quantitative)
+# 
+# print("community")
+# dim(community)
+# str(community)
 ```
 
 ```{r}
@@ -42,52 +46,51 @@ summary(occurrence$ANNUAL_RAIN)
 summary(occurrence$ALTITUDE)
 summary(occurrence$ANNUAL_TEMP)
 ```
-
+# Partie barplot
 
 ```{r}
-library(Factoshiny)
+occurrence %>% 
+  group_by(SPECIES) %>% 
+	summarise(n = n()) %>%
+	mutate(SPECIES = factor(SPECIES, levels = SPECIES[order(n)])) %>% 
+	mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>% 
+  ggplot(aes(x= SPECIES, y = n, fill = FAMILY))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  theme_minimal() +
+	scale_fill_brewer(palette = "Dark2")
+```
+
+# Partie carto
+
+```{r, fig.height=10}
+
+sbbox <- make_bbox(lon = c(min(occurrence$LONGITUDE_X), max(occurrence$LONGITUDE_X)), 
+									 lat = c(min(occurrence$LATITUDE_Y), max(occurrence$LATITUDE_Y)),
+									 f = 0.01)
+southamerica <- get_map(location = sbbox, maptype = "terrain")
+southamerica_map = ggmap(southamerica)
+southamerica_map
+```
+
+```{r fig.height=10}
+southamerica_map + geom_point(data = occurrence, aes(x = LONGITUDE_X, y = LATITUDE_Y, col = SPECIES), size = 1.2)
+```
+
+
+
+
+# Partie analyse
+```{r}
 dta <- occurrence[,c(4,16:18)]
-summary(dta)
-Factoshiny(dta)
 
-```
-
-
-essai pour réaliser le fond de carte centré sur l'amérique latine 
-
-```{r}
-world <- ne_countries(scale = "medium", returnclass = "sf")
-st_crs(world)
-
-world %>% filter(brk_name == "South America") %>% ggplot() + geom_sf()
-
-```
-```{r}
-library(ggmap)
-
-register_google(key = "")
-map <- get_googlemap("Montpellier, France", zoom = 8, maptype = "terrain")
-
-ggmap(map) + 
-  theme_void() + 
-  ggtitle("terrain") + 
-  theme(
-    plot.title = element_text(colour = "orange"), 
-    panel.border = element_rect(colour = "grey", fill=NA, size=2)
-  )
-```
-
-
-
-
-
-```{r}
 dfcompleted <-
 	missMDA::imputePCA(dta, ncp = 2, quali.sup = c(1))$completeObs
 res.PCA <- PCA(dfcompleted,
 							 ncp = 2,
 							 quali.sup = c(1),
-							 graph = FALSE)
+							 graph = T)
+
 res.HCPC <- HCPC(
 	res.PCA,
 	nb.clust = 3,
@@ -100,6 +103,7 @@ plot.HCPC(res.HCPC,
 					choice = 'map',
 					draw.tree = FALSE,
 					title = 'Plan factoriel')
+
 plot.HCPC(
 	res.HCPC,
 	choice = '3D.map',
@@ -114,15 +118,13 @@ plot.HCPC(
 data_classifie <- as.data.frame(res.HCPC$data.clust)
 head(data_classifie)
 table(data_classifie$SPECIES, data_classifie$clust)
-```
-```{r}
+
+
 nesp = length(levels(data_classifie$SPECIES))
 sp_clust <- table(data_classifie$SPECIES, data_classifie$clust)
 sp_proba_clust <- data.frame(proba1 = rep(NA, nesp),
 														 proba2 = rep(NA, nesp),
 														 proba3 = rep(NA, nesp))
-
 ```
-
 
 
