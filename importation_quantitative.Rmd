@@ -10,6 +10,7 @@ library("ggplot2")
 library("rnaturalearth")
 library("rnaturalearthdata")
 library("Factoshiny")
+library("dplyr")
 ```
 
 ```{r}
@@ -26,16 +27,7 @@ str(quantitative)
 str(community)
 ```
 
-essai pour réaliser le fond de carte centré sur l'amérique latine 
 
-```{r}
-world <- ne_countries(scale = "medium", returnclass = "sf")
-amerique_dta <- world  %>% filter(name == '')
-st_crs(amerique_dta)
-amerique_dta%>% ggplot() + geom_sf()
-
-
-```
 ```{r}
 world <- ne_countries(scale = "medium", returnclass = "sf")
 st_crs(world )
@@ -88,12 +80,6 @@ data_classifie <- as.data.frame(res.HCPC$data.clust)
 head(data_classifie)
 table(data_classifie$SPECIES, data_classifie$clust)
 ```
-```
-
-```{r}
-catdesshiny(dta)
-```
-
 
 ggplot des abondances espèces
 ```{r}
@@ -101,22 +87,28 @@ library(tidyverse)
 
 ```
 
+
+mettre couleur par famille? 
 ```{r}
 
-donnees <- data.frame(x = c(7,21,112,32,10,5,2,47,23,10,1,13,13,35,8,1,19,3,3,252,7,8,1,4,2,57,12,1,5),
-                  y = occurence$SPECIES)
-
 occurrence %>% 
-  
-summary(occurrence$SPECIES)
+  group_by(SPECIES) %>% 
+  summarise(n=n()) %>% 
+  arrange(n) %>% 
+  ggplot(aes(x= SPECIES, y = n))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  theme_minimal()
 
 ```
+
 
 ```{r}
 bar <- donnees %>% ggplot()+aes(x=x, y=y)
 ```
 
-```{r}
 
-```
+
+
+
 
