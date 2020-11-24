@@ -11,6 +11,7 @@ library("rnaturalearth")
 library("rnaturalearthdata")
 library("Factoshiny")
 library("dplyr")
+library("RColorBrewer")
 ```
 
 ```{r}
@@ -88,23 +89,30 @@ library(tidyverse)
 ```
 
 
-mettre couleur par famille? 
 ```{r}
-
+occurrence$SPECIES <- as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES)) # Enlève les espaces superflus
 occurrence %>% 
   group_by(SPECIES) %>% 
-  summarise(n=n()) %>% 
-  arrange(n) %>% 
-  ggplot(aes(x= SPECIES, y = n))+
+	summarise(n = n()) %>%
+	mutate(SPECIES = factor(SPECIES, levels = SPECIES[order(n)])) %>% 
+	mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>% 
+  ggplot(aes(x= SPECIES, y = n, fill = FAMILY))+
   geom_bar(stat = "identity")+
   coord_flip()+
-  theme_minimal()
+  theme_minimal()+
+  scale_fill_brewer(palette = "Dark2")
+
 
 ```
 
 
 ```{r}
-bar <- donnees %>% ggplot()+aes(x=x, y=y)
+#sort.species <- species[order()]
+sort.species <- occurrence$SPECIES[order(n)]
+sort.species
+
+
+
 ```
 
 
