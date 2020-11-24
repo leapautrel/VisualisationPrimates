@@ -1,0 +1,128 @@
+---
+title: "primates"
+author: "Junyi Léa Enora"
+output: html_document
+---
+```{r}
+rm(list=ls())
+library("sf")
+library("ggplot2")
+library("rnaturalearth")
+library("rnaturalearthdata")
+```
+
+```{r}
+quantitative <- read.csv("./Dataset/ATLANTIC-PR_Quantitative.csv", header = TRUE, sep = ";")
+occurrence <- read.csv("./Dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
+community <- read.csv("./Dataset/ATLANTIC-PR_Community.csv", header = TRUE, sep = ";")
+
+print("occurence")
+dim(occurrence)
+str(occurrence)
+
+print("quantitative")
+dim(quantitative)
+str(quantitative)
+
+print("community")
+dim(community)
+str(community)
+```
+
+```{r}
+for (i in 29:35){
+	quantitative[,i] <- as.numeric(quantitative[,i])
+}
+summary(quantitative[,29:35])
+```
+
+
+```{r}
+summary(occurrence$ANNUAL_RAIN)
+summary(occurrence$ALTITUDE)
+summary(occurrence$ANNUAL_TEMP)
+```
+
+
+```{r}
+library(Factoshiny)
+dta <- occurrence[,c(4,16:18)]
+summary(dta)
+Factoshiny(dta)
+
+```
+
+
+essai pour réaliser le fond de carte centré sur l'amérique latine 
+
+```{r}
+world <- ne_countries(scale = "medium", returnclass = "sf")
+st_crs(world)
+
+world %>% filter(brk_name == "South America") %>% ggplot() + geom_sf()
+
+```
+```{r}
+library(ggmap)
+
+register_google(key = "")
+map <- get_googlemap("Montpellier, France", zoom = 8, maptype = "terrain")
+
+ggmap(map) + 
+  theme_void() + 
+  ggtitle("terrain") + 
+  theme(
+    plot.title = element_text(colour = "orange"), 
+    panel.border = element_rect(colour = "grey", fill=NA, size=2)
+  )
+```
+
+
+
+
+
+```{r}
+dfcompleted <-
+	missMDA::imputePCA(dta, ncp = 2, quali.sup = c(1))$completeObs
+res.PCA <- PCA(dfcompleted,
+							 ncp = 2,
+							 quali.sup = c(1),
+							 graph = FALSE)
+res.HCPC <- HCPC(
+	res.PCA,
+	nb.clust = 3,
+	kk = 100,
+	consol = FALSE,
+	graph = FALSE
+)
+plot.HCPC(res.HCPC, choice = 'tree', title = 'Arbre hiérarchique')
+plot.HCPC(res.HCPC,
+					choice = 'map',
+					draw.tree = FALSE,
+					title = 'Plan factoriel')
+plot.HCPC(
+	res.HCPC,
+	choice = '3D.map',
+	ind.names = FALSE,
+	centers.plot = FALSE,
+	angle = 60,
+	title = 'Arbre hiérarchique sur le plan factoriel'
+)
+```
+
+```{r}
+data_classifie <- as.data.frame(res.HCPC$data.clust)
+head(data_classifie)
+table(data_classifie$SPECIES, data_classifie$clust)
+```
+```{r}
+nesp = length(levels(data_classifie$SPECIES))
+sp_clust <- table(data_classifie$SPECIES, data_classifie$clust)
+sp_proba_clust <- data.frame(proba1 = rep(NA, nesp),
+														 proba2 = rep(NA, nesp),
+														 proba3 = rep(NA, nesp))
+
+```
+
+
+
