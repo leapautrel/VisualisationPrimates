@@ -130,7 +130,6 @@ occ$redlistCategory = factor(
 	)
 )
 
-levels(occ$redlistCategory)
 # couleurs palette correspondant aux levels de redlistCategory
 pal_iucn <- palette(c(
 	  "#000000", # "Extinct",
