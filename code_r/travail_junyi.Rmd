@@ -1,0 +1,221 @@
+---
+title: "primates"
+author: "Junyi Léa Enora"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+rm(list=ls())
+library("ggplot2") ; theme_set(theme_minimal())
+library("ggmap")
+library("dplyr") ; options(dplyr.summarise.inform = FALSE)
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(RColorBrewer)
+library("plotly")
+library(scales)
+```
+
+```{r}
+#setwd("C:/Users/mimi/Desktop/M2/Visualisation de données/PROJET")
+quantitative <- read.csv("./ATLANTIC-PR_Quantitative.csv", header = TRUE, sep = ";")
+occurrence <- read.csv("./ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
+community <- read.csv("./ATLANTIC-PR_Community.csv", header = TRUE, sep = ";")
+
+occurrence$SPECIES <- as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES)) # Enlève les espaces superflus
+
+# print("occurence")
+# dim(occurrence)
+# str(occurrence)
+# 
+# print("quantitative")
+# dim(quantitative)
+# str(quantitative)
+# 
+# print("community")
+# dim(community)
+# str(community)
+```
+
+```{r}
+for (i in 29:35){
+	quantitative[,i] <- as.numeric(quantitative[,i])
+}
+summary(quantitative[,29:35])
+```
+
+
+```{r}
+summary(occurrence$ANNUAL_RAIN)
+summary(occurrence$ALTITUDE)
+summary(occurrence$ANNUAL_TEMP)
+```
+# Partie barplot
+
+```{r}
+occurrence %>% 
+  group_by(SPECIES) %>% 
+	summarise(n = n()) %>%
+	mutate(SPECIES = factor(SPECIES, levels = SPECIES[order(n)])) %>% 
+	mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>% 
+  ggplot(aes(x= SPECIES, y = n, fill = FAMILY))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  theme_minimal() +
+	scale_fill_brewer(palette = "Dark2")
+```
+
+# Partie carto
+
+```{r, fig.height=10}
+
+sbbox <- make_bbox(lon = c(min(occurrence$LONGITUDE_X), max(occurrence$LONGITUDE_X)), 
+									 lat = c(min(occurrence$LATITUDE_Y), max(occurrence$LATITUDE_Y)),
+									 f = 0.01)
+southamerica <- get_map(location = sbbox, zoom = 7, maptype = "terrain") # résolution à améliorer
+southamerica_map = ggmap(southamerica)
+southamerica_map
+```
+
+
+
+```{r}
+# Suppression des espaces inutiles
+occurrence$SPECIES <-
+	as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES))
+
+# Sélection de colonnes
+occ <- occurrence %>% select(SPECIES,
+														 ALTITUDE,
+														 ANNUAL_TEMP,
+														 ANNUAL_RAIN,
+														 LONGITUDE_X,
+														 LATITUDE_Y)
+# Altitude : quanti -> classe
+occ$ALTITUDE[occ$ALTITUDE < 200] = "Plaine"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) < 1000] = "Basse Montagne"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) >= 1000] = "Haute Montagne"
+occ$ALTITUDE <- as.factor(occ$ALTITUDE)
+occ <- occ[!is.na(occ$ALTITUDE), ]
+
+# Pluviométrie : quanti -> classe
+occ$ANNUAL_RAIN[occ$ANNUAL_RAIN < 1100] = "Sec"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) < 1700] = "Moyen"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) >= 1700] = "Humide"
+occ$ANNUAL_RAIN <- as.factor(occ$ANNUAL_RAIN)
+occ <- occ[!is.na(occ$ANNUAL_RAIN), ]
+
+# Suppression des lignes où espèces pas correctes (croisement ou sp. indéterminée)
+occ <-
+	occ[!(
+		as.character(occ$SPECIES) %in% c(
+			"Callithrix jacchus X Callithrix aurita",
+			"Callithrix jacchus X Callithrix penicillata",
+			"Callithrix kuhlii x Callithrix penicillata",
+			"Callithrix sp.",
+			"Sapajus sp.",
+			"Callicebus sp.",
+			"Alouatta sp."
+		)
+	),]
+occ$SPECIES <- factor(occ$SPECIES)
+
+#Ajout informations iucn
+iucn <- read.csv("./dataset/iucn.csv")
+i <- iucn %>% select(scientificName, redlistCategory)
+occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
+occ$redlistCategory <- factor(occ$redlistCategory)
+levels(occ$redlistCategory)
+
+occ$redlistCategory = factor(
+	occ$redlistCategory,
+	levels = c(
+		"Critically Endangered",
+		"Endangered",
+		"Vulnerable",
+		"Near Threatened",
+		"Least Concern",
+		"Data Deficient"
+	)
+)
+```
+
+
+
+
+```{r fig.height=10}
+
+pal_iucn <- palette(c(
+		"#B3343D", # "Critically Endangered",
+		"#CF6B48", # "Endangered",
+		"#E89E4A", # "Vulnerable",
+		"#FFCF45", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9"  # "Data Deficient",
+		))
+
+map_with_species <- southamerica_map + 
+    geom_point(data = occ,
+               aes(x = LONGITUDE_X, y = LATITUDE_Y, col = redlistCategory,
+                   text = paste0("espèce: ",SPECIES,  "\n iucn:", redlistCategory)), size = 1)+
+   theme (legend.position = "none")+
+   scale_color_manual(values = pal_iucn)
+ 
+
+ggplotly(p = map_with_species, tooltip = "text")
+```
+
+
+
+
+# Partie analyse
+```{r}
+dta <- occurrence[,c(4,16:18)]
+
+dfcompleted <-
+	missMDA::imputePCA(dta, ncp = 2, quali.sup = c(1))$completeObs
+res.PCA <- PCA(dfcompleted,
+							 ncp = 2,
+							 quali.sup = c(1),
+							 graph = T)
+
+res.HCPC <- HCPC(
+	res.PCA,
+	nb.clust = 3,
+	kk = 100,
+	consol = FALSE,
+	graph = FALSE
+)
+plot.HCPC(res.HCPC, choice = 'tree', title = 'Arbre hiérarchique')
+plot.HCPC(res.HCPC,
+					choice = 'map',
+					draw.tree = FALSE,
+					title = 'Plan factoriel')
+
+plot.HCPC(
+	res.HCPC,
+	choice = '3D.map',
+	ind.names = FALSE,
+	centers.plot = FALSE,
+	angle = 60,
+	title = 'Arbre hiérarchique sur le plan factoriel'
+)
+```
+
+```{r}
+data_classifie <- as.data.frame(res.HCPC$data.clust)
+head(data_classifie)
+table(data_classifie$SPECIES, data_classifie$clust)
+
+
+nesp = length(levels(data_classifie$SPECIES))
+sp_clust <- table(data_classifie$SPECIES, data_classifie$clust)
+sp_proba_clust <- data.frame(proba1 = rep(NA, nesp),
+														 proba2 = rep(NA, nesp),
+														 proba3 = rep(NA, nesp))
+```
+
+
+
+
