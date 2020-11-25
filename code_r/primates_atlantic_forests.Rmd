@@ -1,0 +1,58 @@
+---
+title: "Répartition de primates dans les forêts atlantique d'Amérique du Sud"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: yeti
+---
+
+```{r setup, include=FALSE}
+# Packages
+library(flexdashboard)
+library("ggplot2") ; theme_set(theme_minimal())
+library("dplyr") ; options(dplyr.summarise.inform = FALSE)
+
+# Données
+occurrence <- read.csv("./dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
+occurrence$SPECIES <- as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES)) # Enlève les espaces superflus
+```
+
+Exploration
+=====================================  
+
+Column {data-width=400}
+-------------------------------------
+
+### Espèces de primates
+```{r}
+nb_espces <- 26
+nb_familles <- nrow(occurrence %>%
+											mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>%
+											select(FAMILY) %>%
+											distinct(FAMILY))
+valueBox(nb_espces, icon = "tree")
+```
+
+
+### Occurence des différentes espèces
+
+```{r occurrence_barplot, child = 'childs/occurrence_barplot.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+ 
+<!-- ### Chart 3 -->
+
+<!-- ```{r} -->
+<!-- articles <- computeArticles() -->
+<!-- valueBox(articles, icon = "fa-pencil") -->
+<!-- ``` -->
+
+
+Column {data-width=600}
+-------------------------------------
+    
+### Chart 1
+    
+```{r}
+```
+
+Page 2
+=====================================  

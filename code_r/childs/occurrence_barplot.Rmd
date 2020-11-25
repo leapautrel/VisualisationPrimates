@@ -1,0 +1,15 @@
+
+```{r occurrence_barplot}
+occurrence_barplot <- occurrence %>% 
+  group_by(SPECIES) %>% 
+	summarise(n = n()) %>%
+	mutate(SPECIES = factor(SPECIES, levels = SPECIES[order(n)])) %>% 
+	mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>% 
+  ggplot(aes(x= SPECIES, y = n, fill = FAMILY))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  theme_minimal() +
+	scale_fill_brewer(palette = "Dark2")
+print(occurrence_barplot)
+```
+
