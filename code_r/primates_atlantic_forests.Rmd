@@ -5,15 +5,61 @@ output:
     theme: yeti
 ---
 
-```{r setup, include=FALSE}
+```{r library_packages, include=FALSE}
 # Packages
 library(flexdashboard)
-library("ggplot2") ; theme_set(theme_minimal())
-library("dplyr") ; options(dplyr.summarise.inform = FALSE)
+library(ggplot2) ; theme_set(theme_minimal())
+library(dplyr) ; options(dplyr.summarise.inform = FALSE)
+```
 
-# Données
+
+```{r import_data, include=FALSE}
 occurrence <- read.csv("./dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
-occurrence$SPECIES <- as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES)) # Enlève les espaces superflus
+
+# Suppression des espaces inutiles
+occurrence$SPECIES <-
+	as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES))
+
+# Sélection de colonnes
+occ <- occurrence %>% select(SPECIES,
+														 ALTITUDE,
+														 ANNUAL_TEMP,
+														 ANNUAL_RAIN,
+														 LONGITUDE_X,
+														 LATITUDE_Y)
+# Altitude : quanti -> classe
+occ$ALTITUDE[occ$ALTITUDE < 200] = "Plaine"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) < 1000] = "Basse Montagne"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) >= 1000] = "Haute Montagne"
+occ$ALTITUDE <- as.factor(occ$ALTITUDE)
+occ <- occ[!is.na(occ$ALTITUDE), ]
+
+# Pluviométrie : quanti -> classe
+occ$ANNUAL_RAIN[occ$ANNUAL_RAIN < 1100] = "Sec"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) < 1700] = "Moyen"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) >= 1700] = "Humide"
+occ$ANNUAL_RAIN <- as.factor(occ$ANNUAL_RAIN)
+occ <- occ[!is.na(occ$ANNUAL_RAIN), ]
+
+# Suppression des lignes où espèces pas correctes (croisement ou sp. indéterminée)
+occ <-
+	occ[!(
+		as.character(occ$SPECIES) %in% c(
+			"Callithrix jacchus X Callithrix aurita",
+			"Callithrix jacchus X Callithrix penicillata",
+			"Callithrix kuhlii x Callithrix penicillata",
+			"Callithrix sp.",
+			"Sapajus sp.",
+			"Callicebus sp.",
+			"Alouatta sp."
+		)
+	),]
+occ$SPECIES <- factor(occ$SPECIES)
+
+#Ajout informations iucn
+iucn <- read.csv("./dataset/iucn.csv")
+i <- iucn %>% select(scientificName, redlistCategory)
+occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
 ```
 
 Exploration
