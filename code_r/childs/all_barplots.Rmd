@@ -80,7 +80,7 @@ subplot_pluvio_alti <- function(donnees, pluvio, alti, legplot = FALSE) {
 			# Barplot
 			plot <- dta_plot %>%
 				ggplot(aes(x = SPECIES, y = n, fill = redlistCategory)) +
-				geom_bar(aes(text = paste0("Espèce : ", SPECIES, "\nOccurrences : ", n) ),
+				geom_bar(aes(text = paste0(SPECIES, "\nOccurrences : ", n) ),
 								 stat = "identity") +
 				scale_y_continuous(limits = c(0, 600)) +
 				theme(
@@ -105,7 +105,7 @@ subplot_pluvio_alti <- function(donnees, pluvio, alti, legplot = FALSE) {
 			# Barplot
 			plot <- dta_plot %>%
 				ggplot(aes(x = SPECIES, y = n)) +
-				geom_bar(aes(text = paste0("Espèce : ", SPECIES, "\nOccurrences : ", n)),
+				geom_bar(aes(text = paste0(SPECIES, "\nOccurrences : ", n)),
 								 stat = "identity", fill = new_pal_values) +
 				scale_y_continuous(limits = c(0, 600)) +
 				theme(

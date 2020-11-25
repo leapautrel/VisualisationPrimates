@@ -1,0 +1,45 @@
+```{r}
+sbbox2 <- make_bbox(
+	lon = c(min(occ$LONGITUDE_X) - 25, max(occ$LONGITUDE_X)) + 25,
+	lat = c(min(occ$LATITUDE_Y)-2, max(occ$LATITUDE_Y))+2,
+	f = 0.5)
+
+# Création de la carte vide
+southamerica2 <- get_map(location = sbbox2, zoom = 4, maptype = "terrain")
+
+# Ajout du rectangle rouge
+xy <-
+	data.frame(
+		x = c(
+			min(occ$LONGITUDE_X) - 2,
+			min(occ$LONGITUDE_X) - 2,
+			max(occ$LONGITUDE_X) + 3,
+			max(occ$LONGITUDE_X) + 3,
+			min(occ$LONGITUDE_X) - 2
+		),
+		y = c(
+			max(occ$LATITUDE_Y),
+			min(occ$LATITUDE_Y),
+			min(occ$LATITUDE_Y),
+			max(occ$LATITUDE_Y),
+			max(occ$LATITUDE_Y)
+		)
+	)
+
+p2 <- ggmap(southamerica2) + 
+	geom_path(data = xy,
+						aes(x, y),
+						color = "#B3343D",
+						lwd = 1) +
+	theme_void() +
+	theme (
+		axis.text.x = element_blank(),
+		axis.text.y = element_blank(),
+		axis.title.x = element_blank(),
+		axis.title.y = element_blank(),
+		axis.line.x = element_blank(),
+		axis.line.y = element_blank()
+	)
+p2
+```
+

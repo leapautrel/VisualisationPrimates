@@ -1,0 +1,50 @@
+```{r carte_occ}
+pal_iucn <- palette(c(
+		"#B3343D", # "Critically Endangered",
+		"#CF6B48", # "Endangered",
+		"#E89E4A", # "Vulnerable",
+		"#FFCF45", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9"  # "Data Deficient",
+		))
+
+# Emplacement
+sbbox <-
+	make_bbox(lon = c(min(occ$LONGITUDE_X)-10, max(occ$LONGITUDE_X))+10,
+						lat = c(min(occ$LATITUDE_Y), max(occ$LATITUDE_Y)),
+						f = 0.01)
+
+# Création de la carte vide
+southamerica <-
+	get_map(location = sbbox,
+					zoom = 7,
+					maptype = "terrain")
+southamerica_map = ggmap(southamerica) + theme_void()
+
+# Ajout des points
+map_with_species <- southamerica_map +
+	geom_point(
+		data = occ,
+		aes(
+			x = LONGITUDE_X,
+			y = LATITUDE_Y,
+			col = redlistCategory,
+			text = paste0(SPECIES,  "\nCatégorie IUCN : ", redlistCategory)
+		),
+		size = 0.7,
+		alpha = 0.6
+	) +
+	theme (
+		legend.position = "top",
+		axis.text.x = element_blank(),
+		axis.text.y = element_blank(),
+		axis.title.x = element_blank(),
+		axis.title.y = element_blank(),
+		axis.line.x = element_blank(),
+		axis.line.y = element_blank()
+	) +
+	scale_color_manual(values = pal_iucn)
+
+ggplotly(p = map_with_species, tooltip = "text") %>% 
+	layout(showlegend = TRUE, legend = list(orientation = 'h', y = -100, x = 0))
+```

@@ -10,8 +10,9 @@ output:
 library(flexdashboard)
 library(ggplot2) ; theme_set(theme_minimal())
 library(dplyr) ; options(dplyr.summarise.inform = FALSE)
-library(grid) ; library(gridExtra)
+library(grid) ; library(gridExtra) ; library(ggpubr)
 library(plotly)
+library(ggmap)
 ```
 
 
@@ -80,10 +81,11 @@ occ$redlistCategory = factor(
 Exploration
 =====================================  
 
-Column {data-width=400}
+Column {data-width=300}
 -------------------------------------
 
 ### Espèces de primates
+
 ```{r}
 nb_espces <- 26
 nb_familles <- nrow(occurrence %>%
@@ -106,13 +108,16 @@ valueBox(nb_espces, icon = "tree")
 <!-- valueBox(articles, icon = "fa-pencil") -->
 <!-- ``` -->
 
+### Localisation
+```{r carte_localisation, child = 'childs/carte_localisation.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
 
-Column {data-width=600}
+
+Column {data-width=700}
 -------------------------------------
     
-### Chart 1
-    
-```{r}
+### Distribution
+```{r carte_occ, child = 'childs/carte_occ.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
 Page 2

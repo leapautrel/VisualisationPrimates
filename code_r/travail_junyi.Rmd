@@ -69,7 +69,6 @@ occurrence %>%
 # Partie carto
 
 ```{r, fig.height=10}
-
 sbbox <- make_bbox(lon = c(min(occurrence$LONGITUDE_X), max(occurrence$LONGITUDE_X)), 
 									 lat = c(min(occurrence$LATITUDE_Y), max(occurrence$LATITUDE_Y)),
 									 f = 0.01)
