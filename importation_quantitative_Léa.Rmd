@@ -2,6 +2,8 @@
 title: "primates"
 author: "Junyi Léa Enora"
 output: html_document
+editor_options: 
+  chunk_output_type: console
 ---
 ```{r}
 rm(list=ls())
@@ -11,9 +13,12 @@ library("dplyr") ; options(dplyr.summarise.inform = FALSE)
 library("rnaturalearth")
 library("rnaturalearthdata")
 library(RColorBrewer)
+library("plotly")
+library(scales)
 ```
 
 ```{r}
+#setwd("C:/Users/mimi/Desktop/M2/Visualisation de données/PROJET")
 quantitative <- read.csv("./Dataset/ATLANTIC-PR_Quantitative.csv", header = TRUE, sep = ";")
 occurrence <- read.csv("./Dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
 community <- read.csv("./Dataset/ATLANTIC-PR_Community.csv", header = TRUE, sep = ";")
@@ -68,15 +73,26 @@ occurrence %>%
 sbbox <- make_bbox(lon = c(min(occurrence$LONGITUDE_X), max(occurrence$LONGITUDE_X)), 
 									 lat = c(min(occurrence$LATITUDE_Y), max(occurrence$LATITUDE_Y)),
 									 f = 0.01)
-southamerica <- get_map(location = sbbox, maptype = "terrain")
+southamerica <- get_map(location = sbbox, zoom = 7, maptype = "terrain") # résolution à améliorer
 southamerica_map = ggmap(southamerica)
 southamerica_map
 ```
 
 ```{r fig.height=10}
-southamerica_map + geom_point(data = occurrence, aes(x = LONGITUDE_X, y = LATITUDE_Y, col = SPECIES), size = 1.2)
+map_with_species <- southamerica_map + 
+    geom_point(data = occurrence,
+               aes(x = LONGITUDE_X, y = LATITUDE_Y, col = SPECIES, text = paste0("espèce: ",SPECIES)), size = 1)+
+   theme (legend.position = "none")
+ 
+
+ggplotly(p = map_with_species, tooltip = "text")
 ```
 
+2. essayer de supprimer la légende 
+1. visualiser selon les zones et se concentrer sur endangered 
+```{r}
+
+```
 
 
 
@@ -126,5 +142,7 @@ sp_proba_clust <- data.frame(proba1 = rep(NA, nesp),
 														 proba2 = rep(NA, nesp),
 														 proba3 = rep(NA, nesp))
 ```
+
+
 
 
