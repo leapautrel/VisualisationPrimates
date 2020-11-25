@@ -121,16 +121,12 @@ occ$redlistCategory = factor(
 	occ$redlistCategory,
 	levels = c(
 		"Extinct",
-		"EW",
-		"RE",
 		"Critically Endangered",
 		"Endangered",
 		"Vulnerable",
 		"Near Threatened",
 		"Least Concern",
 		"Data Deficient",
-		"NA",
-		"NE"
 	)
 )
 
@@ -138,16 +134,12 @@ levels(occ$redlistCategory)
 # couleurs palette correspondant aux levels de redlistCategory
 pal_iucn <- palette(c(
 	  "#000000", # "Extinct",
-		"#4A3852", # "EW",
-		"#755A82", # "RE",
 		"#8A322D", # "Critically Endangered",
 		"#A15A2D", # "Endangered",
 		"#BF9231", # "Vulnerable",
 		"#A39F37", # "Near Threatened",
 		"#438A32", # "Least Concern",
-		"#C9C9C9", # "Data Deficient",
-		"#9C9C9C", # "NA",
-		"#6E6E6E"  # "NE"
+		"#C9C9C9"  # "Data Deficient",
 		))
 ```
 
