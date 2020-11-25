@@ -1,0 +1,160 @@
+```{r all_barplots}
+# Fonction g_legend pour récupérer la légende d'un ggplot
+g_legend <- function(a.gplot){ 
+    tmp <- ggplot_gtable(ggplot_build(a.gplot)) 
+    leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box") 
+    legend <- tmp$grobs[[leg]] 
+    legend
+}
+
+# subplot_pluvio_alti : fonction pour construire un barplot spécifique de pluvio et alti
+subplot_pluvio_alti <- function(donnees, pluvio, alti, legplot = FALSE) {
+	
+	pal_iucn <- palette(c(
+		"#B3343D", # "Critically Endangered",
+		"#CF6B48", # "Endangered",
+		"#E89E4A", # "Vulnerable",
+		"#FFCF45", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9"  # "Data Deficient",
+		))
+	
+	# Sélection des données pour pluvio et alti
+	dta_plot <- donnees %>%
+		filter(ANNUAL_RAIN == pluvio & ALTITUDE == alti) %>%
+		group_by(SPECIES, ALTITUDE, ANNUAL_RAIN, redlistCategory) %>%
+		summarise(n = n())
+	
+	# Tri par ordre croissant
+	dta_plot$SPECIES = factor(dta_plot$SPECIES,
+														levels = dta_plot$SPECIES[order(dta_plot$n, 
+																														decreasing = TRUE)])
+
+	# Nouvelle colonne avec seulement les levels dans ce sous jeu de données
+	dta_plot$redlistCategory2 <- factor(dta_plot$redlistCategory)
+	
+	# Est-ce qu'on veut récupérer une légende ou faire un beau graphe ?
+	if (legplot){
+		# Palette adaptée pour ce graphique
+			new_pal_values = c()
+			for (rl2 in 1:length(levels(dta_plot$redlistCategory2))) {
+				for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+					if ((levels(dta_plot$redlistCategory2)[rl2]) == levels(dta_plot$redlistCategory)[rl1]) {
+						new_pal_values = c(new_pal_values, pal_iucn[rl1])
+					}
+				}
+			}
+			new_pal = palette(value = new_pal_values)
+			
+			# Barplot
+			plot <- dta_plot %>%
+				ggplot(aes(x = SPECIES, y = n, fill = redlistCategory)) +
+				geom_bar(
+					#aes(text = paste0("Espèce : ", SPECIES, "\nOccurrences : ", n) ),
+								 stat = "identity") +
+				scale_y_continuous(limits = c(0, 600)) +
+				theme(
+					axis.text.x = element_blank(),
+					axis.text.y = element_blank(),
+					axis.title.x = element_blank(),
+					axis.title.y = element_blank(),
+					legend.position = "top",
+					legend.title = element_blank()
+				) +
+				scale_fill_manual(values = new_pal)
+	}
+	# Graphique si plus de 2 levels
+	else{
+		if (length(levels(dta_plot$redlistCategory2)) > 1){
+			# Palette adaptée pour ce graphique
+			new_pal_values = c()
+			for (rl2 in 1:length(levels(dta_plot$redlistCategory2))) {
+				for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+					if ((levels(dta_plot$redlistCategory2)[rl2]) == levels(dta_plot$redlistCategory)[rl1]) {
+						new_pal_values = c(new_pal_values, pal_iucn[rl1])
+					}
+				}
+			}
+			new_pal = palette(value = new_pal_values)
+			
+			# Barplot
+			plot <- dta_plot %>%
+				ggplot(aes(x = SPECIES, y = n, fill = redlistCategory)) +
+				geom_bar(aes(text = paste0("Espèce : ", SPECIES, "\nOccurrences : ", n) ),
+								 stat = "identity") +
+				scale_y_continuous(limits = c(0, 600)) +
+				theme(
+					axis.text.x = element_blank(),
+					axis.text.y = element_blank(),
+					axis.title.x = element_blank(),
+					axis.title.y = element_blank(),
+					legend.position = "none"
+				) +
+				scale_fill_manual(values = new_pal)
+			}
+		
+		
+		# Graphique si un seul level
+		else if (length(levels(dta_plot$redlistCategory2)) == 1){
+			for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+					if ((levels(dta_plot$redlistCategory2)[1]) == levels(dta_plot$redlistCategory)[rl1]) {
+						new_pal_values = pal_iucn[rl1]
+					}
+			}
+			
+			# Barplot
+			plot <- dta_plot %>%
+				ggplot(aes(x = SPECIES, y = n)) +
+				geom_bar(aes(text = paste0("Espèce : ", SPECIES, "\nOccurrences : ", n)),
+								 stat = "identity", fill = new_pal_values) +
+				scale_y_continuous(limits = c(0, 600)) +
+				theme(
+					axis.text.x = element_blank(),
+					axis.text.y = element_blank(),
+					axis.title.x = element_blank(),
+					axis.title.y = element_blank(),
+					legend.position = "none"
+				)
+		}
+	}
+	return(plot)
+}
+
+# On récupère une légende vide
+plot_h_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Plaine", legplot = TRUE)
+legend_iucn <- g_legend(plot_h_p) 
+
+# Pluvio = Humide
+plot_h_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Plaine")
+plot_h_b <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
+plot_h_h <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Haute Montagne")
+
+# Pluvio = Moyen
+plot_m_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Moyen", alti = "Plaine")
+plot_m_b <- subplot_pluvio_alti(donnees = occ, pluvio = "Moyen", alti = "Basse Montagne")
+plot_m_h <- subplot_pluvio_alti(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
+
+# Pluvio = Sec
+plot_s_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Sec", alti = "Plaine")
+plot_s_b <- subplot_pluvio_alti(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
+plot_s_h <- subplot_pluvio_alti(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
+
+plot_h_p <- ggplotly(plot_h_p, tooltip = 'text')
+plot_h_b <- ggplotly(plot_h_b, tooltip = 'text')
+plot_h_h <- ggplotly(plot_h_h, tooltip = 'text')
+plot_m_p <- ggplotly(plot_m_p, tooltip = 'text')
+plot_m_b <- ggplotly(plot_m_b, tooltip = 'text')
+plot_m_h <- ggplotly(plot_m_h, tooltip = 'text')
+plot_s_p <- ggplotly(plot_s_p, tooltip = 'text')
+plot_s_b <- ggplotly(plot_s_b, tooltip = 'text')
+plot_s_h <- ggplotly(plot_s_h, tooltip = 'text')
+
+all_plots = list(plot_h_p, plot_h_b, plot_h_h, 
+								 plot_m_p, plot_m_b, plot_m_h, 
+								 plot_s_p, plot_s_b, plot_s_h)
+
+final_plot <- plotly::subplot(all_plots,
+								nrows = 3)
+final_plot
+``` 
+

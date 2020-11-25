@@ -10,6 +10,8 @@ output:
 library(flexdashboard)
 library(ggplot2) ; theme_set(theme_minimal())
 library(dplyr) ; options(dplyr.summarise.inform = FALSE)
+library(grid) ; library(gridExtra)
+library(plotly)
 ```
 
 
@@ -56,10 +58,23 @@ occ <-
 	),]
 occ$SPECIES <- factor(occ$SPECIES)
 
-#Ajout informations iucn
+# Ajout informations iucn
 iucn <- read.csv("./dataset/iucn.csv")
 i <- iucn %>% select(scientificName, redlistCategory)
 occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
+
+# Changement ordre levels
+occ$redlistCategory = factor(
+	occ$redlistCategory,
+	levels = c(
+		"Critically Endangered",
+		"Endangered",
+		"Vulnerable",
+		"Near Threatened",
+		"Least Concern",
+		"Data Deficient"
+	)
+)
 ```
 
 Exploration
@@ -102,3 +117,14 @@ Column {data-width=600}
 
 Page 2
 =====================================  
+
+Column
+-------------------------------------
+
+### UICN red list
+```{r legende_uicn, child = 'childs/legende_iucn.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+
+### All barplots
+```{r all_barplots, child = 'childs/all_barplots.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
