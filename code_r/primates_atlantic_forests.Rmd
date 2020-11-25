@@ -6,14 +6,174 @@ output:
 ---
 
 ```{r setup, include=FALSE}
+knitr::opts_chunk$set(error = TRUE)
+```
+
+
+```{r import_package, include=FALSE}
 # Packages
 library(flexdashboard)
-library("ggplot2") ; theme_set(theme_minimal())
-library("dplyr") ; options(dplyr.summarise.inform = FALSE)
+library(ggplot2) ; theme_set(theme_minimal())
+library(dplyr) ; options(dplyr.summarise.inform = FALSE)
+library(ggmap)
+library(plotly)
+```
 
-# Données
+```{r import_data, include=FALSE}
+# Importation des données occurrence
 occurrence <- read.csv("./dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
-occurrence$SPECIES <- as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES)) # Enlève les espaces superflus
+
+# Suppression des espaces inutiles
+occurrence$SPECIES <-
+	as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES))
+
+# Sélection de colonnes
+occ <- occurrence %>% select(SPECIES,
+														 ALTITUDE,
+														 ANNUAL_TEMP,
+														 ANNUAL_RAIN,
+														 LONGITUDE_X,
+														 LATITUDE_Y)
+# Altitude : quanti -> classe
+occ$ALTITUDE[occ$ALTITUDE < 200] = "Plaine"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) < 1000] = "Basse Montagne"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) >= 1000] = "Haute Montagne"
+occ$ALTITUDE <- as.factor(occ$ALTITUDE)
+occ <- occ[!is.na(occ$ALTITUDE), ]
+
+# Pluviométrie : quanti -> classe
+occ$ANNUAL_RAIN[occ$ANNUAL_RAIN < 1100] = "Sec"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) < 1700] = "Moyen"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) >= 1700] = "Humide"
+occ$ANNUAL_RAIN <- as.factor(occ$ANNUAL_RAIN)
+occ <- occ[!is.na(occ$ANNUAL_RAIN), ]
+
+# Suppression des lignes où espèces pas correctes (croisement ou sp. indéterminée)
+occ <-
+	occ[!(
+		as.character(occ$SPECIES) %in% c(
+			"Callithrix jacchus X Callithrix aurita",
+			"Callithrix jacchus X Callithrix penicillata",
+			"Callithrix kuhlii x Callithrix penicillata",
+			"Callithrix sp.",
+			"Sapajus sp.",
+			"Callicebus sp.",
+			"Alouatta sp."
+		)
+	),]
+occ$SPECIES <- factor(occ$SPECIES)
+
+#Ajout informations iucn
+iucn <- read.csv("./dataset/iucn.csv")
+i <- iucn %>% select(scientificName, redlistCategory)
+occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
+
+# Levels et palette correspondante
+occ$redlistCategory = factor(
+	occ$redlistCategory,
+	levels = c(
+		"Extinct",
+		"EW",
+		"RE",
+		"Critically Endangered",
+		"Endangered",
+		"Vulnerable",
+		"Near Threatened",
+		"Least Concern",
+		"Data Deficient",
+		"NA",
+		"NE"
+	)
+)
+
+pal_iucn <- palette(c(
+	  "#000000", # "Extinct",
+		"#4A3852", # "EW",
+		"#755A82", # "RE",
+		"#8A322D", # "Critically Endangered",
+		"#A15A2D", # "Endangered",
+		"#BF9231", # "Vulnerable",
+		"#A39F37", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9", # "Data Deficient",
+		"#9C9C9C", # "NA",
+		"#6E6E6E"  # "NE"
+		))
+```
+
+
+```{r import_functions, include=FALSE}
+# subplot prend en entrée le jeu de données et les levels sélectionnés pour pluviométrie et altitude
+# subplot renvoie un plot pour ces levels croisés
+
+subplot <- function(data, pluvio, alti) {
+	
+	# Sélection des données pour pluvio et alti
+	dta_plot <- data %>%
+		filter(data$ANNUAL_RAIN == pluvio & data$ALTITUDE == alti) %>%
+		group_by(SPECIES, ALTITUDE, ANNUAL_RAIN, redlistCategory) %>%
+		summarise(n = n())
+	
+	# Tri par ordre croissant
+	dta_plot$SPECIES = factor(dta_plot$SPECIES,
+														levels = dta_plot$SPECIES[order(dta_plot$n, 
+																														decreasing = TRUE)])
+
+	# Nouvelle colonne avec seulement les levels dans ce sous jeu de données
+	dta_plot$redlistCategory2 <- factor(dta_plot$redlistCategory)
+	
+	# Graphique si plus de 2 levels
+	if (length(levels(dta_plot$redlistCategory2)) > 1){
+		# Palette adaptée pour ce graphique
+		new_pal_values = c()
+		for (rl2 in 1:length(levels(dta_plot$redlistCategory2))) {
+			for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+				if ((levels(dta_plot$redlistCategory2)[rl2]) == levels(dta_plot$redlistCategory)[rl1]) {
+					new_pal_values = c(new_pal_values, pal_iucn[rl1])
+				}
+			}
+		}
+		new_pal = palette(value = new_pal_values)
+		
+		# Barplot
+		plot <- dta_plot %>%
+			ggplot(aes(x = SPECIES, y = n, fill = redlistCategory)) +
+			geom_bar(stat = "identity") +
+			scale_y_continuous(limits = c(0, 600)) +
+			theme(
+				axis.text.x = element_blank(),
+				axis.text.y = element_blank(),
+				axis.title.x = element_blank(),
+				axis.title.y = element_blank(),
+				legend.position = "none"
+			) +
+			scale_fill_manual(values = new_pal)
+		}
+	
+	# Graphique si un seul level
+	else{
+		for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+				if ((levels(dta_plot$redlistCategory2)[1]) == levels(dta_plot$redlistCategory)[rl1]) {
+					new_pal_values = pal_iucn[rl1]
+				}
+		}
+		
+		# Barplot
+		plot <- dta_plot %>%
+			ggplot(aes(x = SPECIES, y = n)) +
+			geom_bar(stat = "identity", fill = new_pal_values) +
+			scale_y_continuous(limits = c(0, 600)) +
+			theme(
+				axis.text.x = element_blank(),
+				axis.text.y = element_blank(),
+				axis.title.x = element_blank(),
+				axis.title.y = element_blank(),
+				legend.position = "none"
+			) +
+			scale_fill_manual(new_pal)
+	}
+	return(plot)
+}
 ```
 
 Exploration
@@ -49,10 +209,69 @@ valueBox(nb_espces, icon = "tree")
 Column {data-width=600}
 -------------------------------------
     
-### Chart 1
+### Carte
     
 ```{r}
 ```
 
-Page 2
+Page 2 sans nom
 =====================================  
+
+Column {data-width=333}
+-------------------------------------
+### test
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Humide", alti = "Plaine"))
+```
+
+### test
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Humide", alti = "Basse Montagne"))
+```
+
+### test
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Humide", alti = "Haute Montagne"))
+```
+
+Column {data-width=333}
+-------------------------------------
+
+### test
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Moyen", alti = "Plaine"))
+```
+
+### test
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Moyen", alti = "Basse Montagne"))
+```
+
+### test
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Moyen", alti = "Haute Montagne"))
+```
+
+Column {data-width=333}
+-------------------------------------
+### test
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Sec", alti = "Plaine"))
+```
+
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Sec", alti = "Basse Montagne"))
+```
+
+
+```{r}
+ggplotly(subplot(data = occ, pluvio = "Sec", alti = "Haute Montagne"))
+```
+
