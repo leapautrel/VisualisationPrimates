@@ -68,6 +68,8 @@ occ$SPECIES <- factor(occ$SPECIES)
 iucn <- read.csv("./dataset/iucn.csv")
 i <- iucn %>% select(scientificName, redlistCategory)
 occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
+occ$redlistCategory <- factor(occ$redlistCategory)
+levels(occ$redlistCategory)
 ```
 
 <!-- ```{r} -->
@@ -115,24 +117,22 @@ occ %>%
 <!-- hist(occurrence$ANNUAL_RAIN, nclass = 50) -->
 <!-- ``` -->
 
-## Fonction subplot
+## Fonction subplot_pluvio_alti
 ```{r}
 occ$redlistCategory = factor(
 	occ$redlistCategory,
 	levels = c(
-		"Extinct",
 		"Critically Endangered",
 		"Endangered",
 		"Vulnerable",
 		"Near Threatened",
 		"Least Concern",
-		"Data Deficient",
+		"Data Deficient"
 	)
 )
 
 # couleurs palette correspondant aux levels de redlistCategory
 pal_iucn <- palette(c(
-	  "#000000", # "Extinct",
 		"#8A322D", # "Critically Endangered",
 		"#A15A2D", # "Endangered",
 		"#BF9231", # "Vulnerable",
@@ -144,12 +144,21 @@ pal_iucn <- palette(c(
 
 
 ```{r}
-# subplot -----------
-subplot <- function(donnees, pluvio, alti) {
+# subplot_pluvio_alti -----------
+subplot_pluvio_alti <- function(donnees, pluvio, alti) {
+	
+	pal_iucn <- palette(c(
+		"#B3343D", # "Critically Endangered",
+		"#CF6B48", # "Endangered",
+		"#E89E4A", # "Vulnerable",
+		"#FFCF45", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9"  # "Data Deficient",
+		))
 	
 	# Sélection des données pour pluvio et alti
 	dta_plot <- donnees %>%
-		filter(data$ANNUAL_RAIN == pluvio & data$ALTITUDE == alti) %>%
+		filter(ANNUAL_RAIN == pluvio & ALTITUDE == alti) %>%
 		group_by(SPECIES, ALTITUDE, ANNUAL_RAIN, redlistCategory) %>%
 		summarise(n = n())
 	
@@ -190,7 +199,7 @@ subplot <- function(donnees, pluvio, alti) {
 		}
 	
 	# Graphique si un seul level
-	else{
+	else if (length(levels(dta_plot$redlistCategory2)) == 1){
 		for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
 				if ((levels(dta_plot$redlistCategory2)[1]) == levels(dta_plot$redlistCategory)[rl1]) {
 					new_pal_values = pal_iucn[rl1]
@@ -218,21 +227,21 @@ subplot <- function(donnees, pluvio, alti) {
 ```{r}
 # Tous les plots --------------------
 # Pluvio = Humide
-plot_h_p <- subplot(donnees = occ, pluvio = "Humide", alti = "Plaine")
-plot_h_b <- subplot(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
-plot_h_h <- subplot(donnees = occ, pluvio = "Humide", alti = "Haute Montagne")
+plot_h_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Plaine")
+plot_h_b <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
+plot_h_h <- subplot_pluvio_alti(donnees = occ, pluvio = "Humide", alti = "Haute Montagne")
 
 # Pluvio = Moyen
-plot_m_p <- subplot(donnees = occ, pluvio = "Moyen", alti = "Plaine")
-plot_m_b <- subplot(donnees = occ, pluvio = "Moyen", alti = "Basse Montagne")
-plot_m_h <- subplot(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
+plot_m_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Moyen", alti = "Plaine")
+plot_m_b <- subplot_pluvio_alti(donnees = occ, pluvio = "Moyen", alti = "Basse Montagne")
+plot_m_h <- subplot_pluvio_alti(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
 
 # Pluvio = Sec
-plot_s_p <- subplot(donnees = occ, pluvio = "Sec", alti = "Plaine")
-plot_s_b <- subplot(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
-plot_s_h <- subplot(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
+plot_s_p <- subplot_pluvio_alti(donnees = occ, pluvio = "Sec", alti = "Plaine")
+plot_s_b <- subplot_pluvio_alti(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
+plot_s_h <- subplot_pluvio_alti(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
 
-ggarrange(plot_h_p, 
+all_plots = list(plot_h_p, 
 plot_h_b, 
 plot_h_h, 
 plot_m_p, 
@@ -242,6 +251,12 @@ plot_s_p,
 plot_s_b, 
 plot_s_h
 )
+```
+
+
+```{r}
+plotly::subplot(all_plots,
+								nrows = 3)
 ```
 
 
@@ -256,8 +271,12 @@ plot_m_h <- ggplotly(plot_m_h)
 plot_s_p <- ggplotly(plot_s_p)
 plot_s_b <- ggplotly(plot_s_b)
 plot_s_h <- ggplotly(plot_s_h)
-
 ```
+
+```{r}
+subplot(all_plots)
+```
+
 
 ```{r}
 plot_h_p
