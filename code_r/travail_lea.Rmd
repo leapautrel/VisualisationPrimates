@@ -1,0 +1,361 @@
+---
+title: "primates"
+author: "Junyi Léa Enora"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+```{r}
+rm(list=ls())
+library("ggplot2") ; theme_set(theme_minimal())
+library("ggmap")
+library("dplyr") ; options(dplyr.summarise.inform = FALSE)
+library("rnaturalearth")
+library("rnaturalearthdata")
+library(RColorBrewer)
+library(ggpubr)
+library(plotly)
+```
+
+```{r}
+# quantitative <- read.csv("./dataset/ATLANTIC-PR_Quantitative.csv", header = TRUE, sep = ";")
+occurrence <- read.csv("./dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
+# community <- read.csv("./dataset/ATLANTIC-PR_Community.csv", header = TRUE, sep = ";")
+```
+Mise en forme jdd occurrence
+```{r}
+# Suppression des espaces inutiles
+occurrence$SPECIES <-
+	as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES))
+
+# Sélection de colonnes
+occ <- occurrence %>% select(SPECIES,
+														 ALTITUDE,
+														 ANNUAL_TEMP,
+														 ANNUAL_RAIN,
+														 LONGITUDE_X,
+														 LATITUDE_Y)
+# Altitude : quanti -> classe
+occ$ALTITUDE[occ$ALTITUDE < 200] = "Plaine"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) < 1000] = "Basse Montagne"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) >= 1000] = "Haute Montagne"
+occ$ALTITUDE <- as.factor(occ$ALTITUDE)
+occ <- occ[!is.na(occ$ALTITUDE), ]
+
+# Pluviométrie : quanti -> classe
+occ$ANNUAL_RAIN[occ$ANNUAL_RAIN < 1100] = "Sec"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) < 1700] = "Moyen"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) >= 1700] = "Humide"
+occ$ANNUAL_RAIN <- as.factor(occ$ANNUAL_RAIN)
+occ <- occ[!is.na(occ$ANNUAL_RAIN), ]
+
+# Suppression des lignes où espèces pas correctes (croisement ou sp. indéterminée)
+occ <-
+	occ[!(
+		as.character(occ$SPECIES) %in% c(
+			"Callithrix jacchus X Callithrix aurita",
+			"Callithrix jacchus X Callithrix penicillata",
+			"Callithrix kuhlii x Callithrix penicillata",
+			"Callithrix sp.",
+			"Sapajus sp.",
+			"Callicebus sp.",
+			"Alouatta sp."
+		)
+	),]
+occ$SPECIES <- factor(occ$SPECIES)
+
+#Ajout informations iucn
+iucn <- read.csv("./dataset/iucn.csv")
+i <- iucn %>% select(scientificName, redlistCategory)
+occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
+```
+
+<!-- ```{r} -->
+<!-- for (i in 29:35){ -->
+<!-- 	quantitative[,i] <- as.numeric(quantitative[,i]) -->
+<!-- } -->
+<!-- summary(quantitative[,29:35]) -->
+<!-- ``` -->
+
+
+```{r}
+summary(occurrence$ANNUAL_RAIN)
+summary(occurrence$ALTITUDE)
+summary(occurrence$ANNUAL_TEMP)
+```
+
+# Partie barplot
+
+```{r}
+occ %>% 
+  group_by(SPECIES) %>% 
+	summarise(n = n()) %>%
+	mutate(SPECIES = factor(SPECIES, levels = SPECIES[order(n)])) %>% 
+	mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>% 
+  ggplot(aes(x= SPECIES, y = n, fill = FAMILY))+
+  geom_bar(stat = "identity")+
+  coord_flip()+
+  theme_minimal() +
+	scale_fill_brewer(palette = "Dark2")
+```
+
+<!-- ## Séparation humidité/temp-alt  -->
+<!-- ```{r} -->
+<!-- quantile(occurrence$ANNUAL_RAIN, c(1/3, 2/3), na.rm = TRUE) -->
+<!-- quantile(occurrence$ALTITUDE, c(1/3, 2/3), na.rm = TRUE) -->
+<!-- ``` -->
+
+<!-- * Jusqu'à 200 : plaine -->
+<!-- * 200-1000 : basse montagne -->
+<!-- * 1000 - ? : moyenne et haute montagne -->
+
+
+<!-- ```{r} -->
+<!-- plot(occurrence$ALTITUDE, occurrence$ANNUAL_TEMP) -->
+<!-- hist(occurrence$ANNUAL_RAIN, nclass = 50) -->
+<!-- ``` -->
+
+## Fonction subplot
+```{r}
+occ$redlistCategory = factor(
+	occ$redlistCategory,
+	levels = c(
+		"Extinct",
+		"EW",
+		"RE",
+		"Critically Endangered",
+		"Endangered",
+		"Vulnerable",
+		"Near Threatened",
+		"Least Concern",
+		"Data Deficient",
+		"NA",
+		"NE"
+	)
+)
+
+levels(occ$redlistCategory)
+# couleurs palette correspondant aux levels de redlistCategory
+pal_iucn <- palette(c(
+	  "#000000", # "Extinct",
+		"#4A3852", # "EW",
+		"#755A82", # "RE",
+		"#8A322D", # "Critically Endangered",
+		"#A15A2D", # "Endangered",
+		"#BF9231", # "Vulnerable",
+		"#A39F37", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9", # "Data Deficient",
+		"#9C9C9C", # "NA",
+		"#6E6E6E"  # "NE"
+		))
+```
+
+
+```{r}
+# subplot -----------
+subplot <- function(donnees, pluvio, alti) {
+	
+	# Sélection des données pour pluvio et alti
+	dta_plot <- donnees %>%
+		filter(data$ANNUAL_RAIN == pluvio & data$ALTITUDE == alti) %>%
+		group_by(SPECIES, ALTITUDE, ANNUAL_RAIN, redlistCategory) %>%
+		summarise(n = n())
+	
+	# Tri par ordre croissant
+	dta_plot$SPECIES = factor(dta_plot$SPECIES,
+														levels = dta_plot$SPECIES[order(dta_plot$n, 
+																														decreasing = TRUE)])
+
+	# Nouvelle colonne avec seulement les levels dans ce sous jeu de données
+	dta_plot$redlistCategory2 <- factor(dta_plot$redlistCategory)
+	
+	# Graphique si plus de 2 levels
+	if (length(levels(dta_plot$redlistCategory2)) > 1){
+		# Palette adaptée pour ce graphique
+		new_pal_values = c()
+		for (rl2 in 1:length(levels(dta_plot$redlistCategory2))) {
+			for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+				if ((levels(dta_plot$redlistCategory2)[rl2]) == levels(dta_plot$redlistCategory)[rl1]) {
+					new_pal_values = c(new_pal_values, pal_iucn[rl1])
+				}
+			}
+		}
+		new_pal = palette(value = new_pal_values)
+		
+		# Barplot
+		plot <- dta_plot %>%
+			ggplot(aes(x = SPECIES, y = n, fill = redlistCategory)) +
+			geom_bar(stat = "identity") +
+			scale_y_continuous(limits = c(0, 600)) +
+			theme(
+				axis.text.x = element_blank(),
+				axis.text.y = element_blank(),
+				axis.title.x = element_blank(),
+				axis.title.y = element_blank(),
+				legend.position = "none"
+			) +
+			scale_fill_manual(values = new_pal)
+		}
+	
+	# Graphique si un seul level
+	else{
+		for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+				if ((levels(dta_plot$redlistCategory2)[1]) == levels(dta_plot$redlistCategory)[rl1]) {
+					new_pal_values = pal_iucn[rl1]
+				}
+		}
+		
+		# Barplot
+		plot <- dta_plot %>%
+			ggplot(aes(x = SPECIES, y = n)) +
+			geom_bar(stat = "identity", fill = new_pal_values) +
+			scale_y_continuous(limits = c(0, 600)) +
+			theme(
+				axis.text.x = element_blank(),
+				axis.text.y = element_blank(),
+				axis.title.x = element_blank(),
+				axis.title.y = element_blank(),
+				legend.position = "none"
+			)
+	}
+	return(plot)
+}
+```
+
+
+```{r}
+# Tous les plots --------------------
+# Pluvio = Humide
+plot_h_p <- subplot(donnees = occ, pluvio = "Humide", alti = "Plaine")
+plot_h_b <- subplot(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
+plot_h_h <- subplot(donnees = occ, pluvio = "Humide", alti = "Haute Montagne")
+
+# Pluvio = Moyen
+plot_m_p <- subplot(donnees = occ, pluvio = "Moyen", alti = "Plaine")
+plot_m_b <- subplot(donnees = occ, pluvio = "Moyen", alti = "Basse Montagne")
+plot_m_h <- subplot(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
+
+# Pluvio = Sec
+plot_s_p <- subplot(donnees = occ, pluvio = "Sec", alti = "Plaine")
+plot_s_b <- subplot(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
+plot_s_h <- subplot(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
+
+ggarrange(plot_h_p, 
+plot_h_b, 
+plot_h_h, 
+plot_m_p, 
+plot_m_b, 
+plot_m_h, 
+plot_s_p, 
+plot_s_b, 
+plot_s_h
+)
+```
+
+
+```{r}
+# ggplotly ------------------
+plot_h_p <- ggplotly(plot_h_p)
+plot_h_b <- ggplotly(plot_h_b)
+plot_h_h <- ggplotly(plot_h_h)
+plot_m_p <- ggplotly(plot_m_p)
+plot_m_b <- ggplotly(plot_m_b)
+plot_m_h <- ggplotly(plot_m_h)
+plot_s_p <- ggplotly(plot_s_p)
+plot_s_b <- ggplotly(plot_s_b)
+plot_s_h <- ggplotly(plot_s_h)
+
+```
+
+```{r}
+plot_h_p
+plot_h_b
+plot_h_h
+plot_m_p
+plot_m_b
+plot_m_h
+plot_s_p
+plot_s_b
+plot_s_h
+
+```
+
+tests
+```{r}
+library(GGally)
+GGally::ggpairs(occ[,c(1,2,4)],
+								cardinality_threshold = 27)
+
+```
+
+
+
+<!-- # Partie carto -->
+
+<!-- ```{r, fig.height=10} -->
+
+<!-- sbbox <- make_bbox(lon = c(min(occurrence$LONGITUDE_X), max(occurrence$LONGITUDE_X)),  -->
+<!-- 									 lat = c(min(occurrence$LATITUDE_Y), max(occurrence$LATITUDE_Y)), -->
+<!-- 									 f = 0.01) -->
+<!-- southamerica <- get_map(location = sbbox, zoom = 10, maptype = "terrain") -->
+<!-- southamerica_map = ggmap(southamerica) -->
+<!-- southamerica_map -->
+<!-- southamerica_map + geom_point(data = occurrence, aes(x = LONGITUDE_X, y = LATITUDE_Y, col = SPECIES), size = 1.2) -->
+<!-- ``` -->
+
+<!-- ```{r fig.height=10} -->
+<!-- southamerica_map + geom_point(data = occurrence, aes(x = LONGITUDE_X, y = LATITUDE_Y, col = SPECIES), size = 1.2) -->
+<!-- ``` -->
+
+
+
+
+<!-- # Partie analyse -->
+<!-- ```{r} -->
+<!-- dta <- occurrence[,c(4,16:18)] -->
+
+<!-- dfcompleted <- -->
+<!-- 	missMDA::imputePCA(dta, ncp = 2, quali.sup = c(1))$completeObs -->
+<!-- res.PCA <- PCA(dfcompleted, -->
+<!-- 							 ncp = 2, -->
+<!-- 							 quali.sup = c(1), -->
+<!-- 							 graph = T) -->
+
+<!-- res.HCPC <- HCPC( -->
+<!-- 	res.PCA, -->
+<!-- 	nb.clust = 3, -->
+<!-- 	kk = 100, -->
+<!-- 	consol = FALSE, -->
+<!-- 	graph = FALSE -->
+<!-- ) -->
+<!-- plot.HCPC(res.HCPC, choice = 'tree', title = 'Arbre hiérarchique') -->
+<!-- plot.HCPC(res.HCPC, -->
+<!-- 					choice = 'map', -->
+<!-- 					draw.tree = FALSE, -->
+<!-- 					title = 'Plan factoriel') -->
+
+<!-- plot.HCPC( -->
+<!-- 	res.HCPC, -->
+<!-- 	choice = '3D.map', -->
+<!-- 	ind.names = FALSE, -->
+<!-- 	centers.plot = FALSE, -->
+<!-- 	angle = 60, -->
+<!-- 	title = 'Arbre hiérarchique sur le plan factoriel' -->
+<!-- ) -->
+<!-- ``` -->
+
+<!-- ```{r} -->
+<!-- data_classifie <- as.data.frame(res.HCPC$data.clust) -->
+<!-- head(data_classifie) -->
+<!-- table(data_classifie$SPECIES, data_classifie$clust) -->
+
+
+<!-- nesp = length(levels(data_classifie$SPECIES)) -->
+<!-- sp_clust <- table(data_classifie$SPECIES, data_classifie$clust) -->
+<!-- sp_proba_clust <- data.frame(proba1 = rep(NA, nesp), -->
+<!-- 														 proba2 = rep(NA, nesp), -->
+<!-- 														 proba3 = rep(NA, nesp)) -->
+<!-- ``` -->
+
+
