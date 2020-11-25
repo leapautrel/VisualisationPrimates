@@ -78,18 +78,34 @@ southamerica_map = ggmap(southamerica)
 southamerica_map
 ```
 
+```{r}
+pal_iucn <- palette(c(
+	  "#000000", # "Extinct",
+		"#4A3852", # "EW",
+		"#755A82", # "RE",
+		"#8A322D", # "Critically Endangered",
+		"#A15A2D", # "Endangered",
+		"#BF9231", # "Vulnerable",
+		"#A39F37", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9", # "Data Deficient",
+		"#9C9C9C", # "NA",
+		"#6E6E6E"  # "NE"
+		))
+```
+
 ```{r fig.height=10}
 map_with_species <- southamerica_map + 
     geom_point(data = occurrence,
                aes(x = LONGITUDE_X, y = LATITUDE_Y, col = SPECIES, text = paste0("espèce: ",SPECIES)), size = 1)+
-   theme (legend.position = "none")
+   theme (legend.position = "none")+
+    scale_col_manual(values = pal_iucn)
  
 
 ggplotly(p = map_with_species, tooltip = "text")
 ```
 
-2. essayer de supprimer la légende 
-1. visualiser selon les zones et se concentrer sur endangered 
+
 ```{r}
 
 ```
