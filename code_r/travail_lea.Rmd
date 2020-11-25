@@ -68,8 +68,17 @@ occ$SPECIES <- factor(occ$SPECIES)
 iucn <- read.csv("./dataset/iucn.csv")
 i <- iucn %>% select(scientificName, redlistCategory)
 occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
-occ$redlistCategory <- factor(occ$redlistCategory)
-levels(occ$redlistCategory)
+occ$redlistCategory = factor(
+	occ$redlistCategory,
+	levels = c(
+		"Critically Endangered",
+		"Endangered",
+		"Vulnerable",
+		"Near Threatened",
+		"Least Concern",
+		"Data Deficient"
+	)
+)
 ```
 
 <!-- ```{r} -->
@@ -119,18 +128,6 @@ occ %>%
 
 ## Fonction subplot_pluvio_alti
 ```{r}
-occ$redlistCategory = factor(
-	occ$redlistCategory,
-	levels = c(
-		"Critically Endangered",
-		"Endangered",
-		"Vulnerable",
-		"Near Threatened",
-		"Least Concern",
-		"Data Deficient"
-	)
-)
-
 # couleurs palette correspondant aux levels de redlistCategory
 pal_iucn <- palette(c(
 		"#8A322D", # "Critically Endangered",
