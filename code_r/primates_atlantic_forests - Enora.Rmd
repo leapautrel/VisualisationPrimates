@@ -1,0 +1,193 @@
+---
+title: "Conservation des primates de la forêt atlantique d'Amérique du Sud"
+output: 
+  flexdashboard::flex_dashboard:
+    theme: yeti
+---
+
+```{r library_packages, include=FALSE}
+# Packages
+library(flexdashboard)
+library(ggplot2) ; theme_set(theme_minimal())
+library(dplyr) ; options(dplyr.summarise.inform = FALSE)
+library(grid) ; library(gridExtra) ; library(ggpubr)
+library(plotly)
+library(ggmap)
+library(htmltools)
+```
+
+
+```{r import_data, include=FALSE}
+occurrence <- read.csv("./dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
+
+# Suppression des espaces inutiles
+occurrence$SPECIES <-
+	as.factor(gsub("^\\s+|\\s+$", "", occurrence$SPECIES))
+
+# Sélection de colonnes
+occ <- occurrence %>% select(SPECIES,
+														 SP_ORIGIN,
+														 ALTITUDE,
+														 ANNUAL_TEMP,
+														 ANNUAL_RAIN,
+														 LONGITUDE_X,
+														 LATITUDE_Y)
+# Altitude : quanti -> classe
+occ$ALTITUDE[occ$ALTITUDE < 200] = "Plaine"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) < 1000] = "Basse Montagne"
+occ$ALTITUDE[as.numeric(occ$ALTITUDE) >= 1000] = "Haute Montagne"
+occ$ALTITUDE <- as.factor(occ$ALTITUDE)
+occ <- occ[!is.na(occ$ALTITUDE), ]
+
+# Pluviométrie : quanti -> classe
+occ$ANNUAL_RAIN[occ$ANNUAL_RAIN < 1100] = "Sec"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) < 1700] = "Moyen"
+occ$ANNUAL_RAIN[as.numeric(occ$ANNUAL_RAIN) >= 1700] = "Humide"
+occ$ANNUAL_RAIN <- as.factor(occ$ANNUAL_RAIN)
+occ <- occ[!is.na(occ$ANNUAL_RAIN), ]
+
+# Suppression des lignes où espèces pas correctes (croisement ou sp. indéterminée)
+occ <-
+	occ[!(
+		as.character(occ$SPECIES) %in% c(
+			"Callithrix jacchus X Callithrix aurita",
+			"Callithrix jacchus X Callithrix penicillata",
+			"Callithrix kuhlii x Callithrix penicillata",
+			"Callithrix sp.",
+			"Sapajus sp.",
+			"Callicebus sp.",
+			"Alouatta sp."
+		)
+	),]
+occ$SPECIES <- factor(occ$SPECIES)
+
+# Ajout informations iucn
+iucn <- read.csv("./dataset/iucn.csv")
+i <- iucn %>% select(scientificName, redlistCategory)
+occ <- left_join(occ, i, by = c("SPECIES" = "scientificName"))
+
+# Changement ordre levels
+occ$redlistCategory = factor(
+	occ$redlistCategory,
+	levels = c(
+		"Critically Endangered",
+		"Endangered",
+		"Vulnerable",
+		"Near Threatened",
+		"Least Concern",
+		"Data Deficient"
+	)
+)
+```
+
+
+```{r find_data, include=FALSE}
+nb_especes_autochtones <- nrow(occ %>% 
+	select(SPECIES, SP_ORIGIN) %>% 
+	filter(SP_ORIGIN == "Autochtone") %>% 
+	mutate(SPECIES = factor(SPECIES)) %>% 
+	distinct(SPECIES, SP_ORIGIN))
+
+especes_menacees <-  occ %>% 
+	select(SPECIES, redlistCategory) %>% 
+	filter(
+		redlistCategory == "Critically Endangered" |
+			redlistCategory == "Endangered"  |
+			redlistCategory == "Vulnerable"
+	) %>%
+	mutate(SPECIES = factor(SPECIES)) %>% 
+	distinct(SPECIES)
+	
+especes_CR <- occ %>% 
+	select(SPECIES, redlistCategory) %>% 
+	filter(redlistCategory == "Critically Endangered") %>% 
+	mutate(SPECIES = factor(SPECIES)) %>% 
+	distinct(SPECIES)
+
+especes_endangered <- nrow(
+	occ %>%
+		select(SPECIES, redlistCategory) %>%
+		filter(redlistCategory == "Endangered") %>%
+		mutate(SPECIES = factor(SPECIES)) %>%
+		distinct(SPECIES)
+)
+
+especes_vulnerable <- nrow(
+	occ %>%
+		select(SPECIES, redlistCategory) %>%
+		filter(redlistCategory == "Vulnerable") %>%
+		mutate(SPECIES = factor(SPECIES)) %>%
+		distinct(SPECIES)
+)
+
+```
+
+Description des primates présents
+=====================================  
+
+Column {data-width=250}
+-------------------------------------
+
+### 26 espèces, de 7 familles de primates 
+
+```{r occurrence_barplot, child = 'childs/occurrence_barplot.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+
+### Localisation de la forêt atlantique
+
+```{r carte_localisation, child = 'childs/carte_localisation.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+
+
+Column {data-width=520}
+-------------------------------------
+    
+### Distribution
+```{r carte_occ, child = 'childs/carte_occ.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+
+
+Column {data-width=230}
+-------------------------------------
+
+### Espèces autochtones
+
+```{r}
+valueBox(nb_especes_autochtones, icon = "globe-americas", color = "#DAC5B8")
+```
+
+### Espèces menacées (CR, EN, VU)
+
+```{r}
+valueBox(nrow(especes_menacees), icon = "cloud", color = "#5E1315")
+```
+
+### 6 espèces en danger critique (CR)
+
+```{r}
+knitr::kable(especes_CR)
+```
+
+### Espèces en danger (EN)
+
+```{r}
+valueBox(especes_endangered, icon = "exclamation-triangle", color = "#CF6B48")
+```
+
+### Espèces vulnérables (VU)
+
+```{r}
+valueBox(especes_vulnerable, icon = "exclamation-triangle", color = "#E89E4A")
+```
+
+
+
+Types de zones à protéger
+=====================================  
+
+Column
+-------------------------------------
+
+### Distribution des espèces dans les différents types de milieux
+```{r all_barplots_plotly, child = 'childs/all_barplots_plotly.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
