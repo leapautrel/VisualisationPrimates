@@ -1,9 +1,4 @@
----
-output: html_document
-editor_options: 
-  chunk_output_type: console
----
-```{r all_barplots}
+```{r all_barplots_plotly}
 # Fonction f_sep_donnees pour récupérer les données spécifiques pour pluvio et alti ----
 f_sep_donnees <- function(donnees, alti, pluvio) {
 	
@@ -141,8 +136,6 @@ all_plots = list(plot_h_p, plot_h_b, plot_h_h,
 								 plot_m_p, plot_m_b, plot_m_h, 
 								 plot_s_p, plot_s_b, plot_s_h)
 
-plotly::subplot(all_plots,
-								nrows = 3)
-final_plot
+plotly::subplot(all_plots, nrows = 3)
 ``` 
 
