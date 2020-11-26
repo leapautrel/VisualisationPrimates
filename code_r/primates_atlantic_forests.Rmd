@@ -126,10 +126,6 @@ Page 2
 Column
 -------------------------------------
 
-### UICN red list
-```{r legende_uicn, child = 'childs/legende_iucn.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
-```
-
-### All barplots
-```{r all_barplots, child = 'childs/all_barplots.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+### Distribution des espèces dans les différents types de milieux
+```{r all_barplots, child = 'childs/all_barplots_plotly.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
