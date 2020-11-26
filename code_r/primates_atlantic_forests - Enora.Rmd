@@ -200,9 +200,25 @@ plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
   new_pal_iucn <- plot_palette_specifique(dta_plot)
   
   # On ajoute des couleurs de fond selon la valeur de pluvio
-  if (pluvio == "Sec"){background_color = "#E0D5C8"}
-  else if (pluvio == "Moyen"){background_color = "#EAEBE4"}
-  else if (pluvio == "Humide"){background_color = "#D9EBE8"}
+  if (pluvio == "Sec"){if(alti == "Plaine"){background_color = "#EDE3D8"}
+    else if(alti == "Basse Montagne"){
+    background_color = "#E0D5C8"
+    }
+    else if(alti == "Haute Montagne"){background_color = "#CFC0B0"
+    }
+  }
+  else if (pluvio == "Moyen"){if(alti == "Plaine"){background_color = "#EEF0E6"}
+    else if(alti == "Basse Montagne"){
+    background_color = "#EAEBE4"
+    }
+    else if(alti == "Haute Montagne"){background_color = "#E5E8D3"
+    }}
+  else if (pluvio == "Humide"){if(alti == "Plaine"){background_color = "#DAEDEA"}
+    else if(alti == "Basse Montagne"){
+    background_color = "#D9EBE8"
+    }
+    else if(alti == "Haute Montagne"){background_color = "#D5E6E3"
+    }}
   
   # On créé des variables de style pour layout
   axe_x_list <- list(
@@ -225,10 +241,11 @@ plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
   l <- list(
   font = list(
     family = "sans-serif",
-    size = 11,
+    size = 5,
     color = "#000"),
-  bgcolor = "white")
-  
+  bgcolor = "white",     yanchor="top",
+    xanchor="left", x = 0, y = 1.5, orientation="h")
+
   figure = plot_ly(
     dta_plot,
     type = 'bar',
@@ -251,7 +268,7 @@ plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
 # Pluvio = Humide
 plot_h_p <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Plaine")
 plot_h_b <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
-plot_h_h <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Haute Montagne")
+plot_h_h <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Haute Montagne", legende_bool = TRUE)
 # Pluvio = Moyen
 plot_m_p <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Plaine")
 plot_m_b <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Basse Montagne")
@@ -259,16 +276,25 @@ plot_m_h <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
 # Pluvio = Sec
 plot_s_p <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Plaine")
 plot_s_b <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
-plot_s_h <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Haute Montagne", legende_bool = TRUE)
+plot_s_h <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
 library(htmltools)
+s <- "width: 31%;height: 9em;display: flex;border: solid white; justify-content: center;"
 browsable(div(style = "display: flex; flex-wrap: wrap; justify-content: center;",
-    div(plot_s_h, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_m_h, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_h_h, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_s_b, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_m_b, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_h_b, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_s_p, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_m_p, style = "width: 30%;height: 11em;display: flex"),
-    div(plot_h_p, style = "width: 30%;height: 11em;display: flex")))
+    div("Haute Montagne", style = "background: #F0F0F0; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;text-orientation: mixed;transform: rotate(180deg);"),
+    div(plot_s_h, style = s),
+    div(plot_m_h, style = s),
+    div(plot_h_h, style = s),
+    div("Basse Montagne", style = "background: #F2F2F2; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);"),
+    div(plot_s_b, style = s),
+    div(plot_m_b, style = s),
+    div(plot_h_b, style = s),
+    div("Plaine", style = "background: #F5F5F5; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);"),
+    div(plot_s_p, style = s),
+    div(plot_m_p, style = s),
+    div(plot_h_p, style = s),
+    div(style = "width : 3.8em;"),
+    div("Sec", style = "background: #E0D5C8; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"),
+    div("Moyen", style = "background: #EAEBE4; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"),
+    div("Humide", style = "background: #D9EBE8; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;")))
+
 ```
