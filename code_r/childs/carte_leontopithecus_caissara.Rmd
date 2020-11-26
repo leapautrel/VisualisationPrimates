@@ -1,0 +1,51 @@
+```{r leontopithecus_caissara}
+# Sélection
+leo <- subset(occ, SPECIES == "Leontopithecus caissara")
+
+# Nouveau zoom carte
+sbbox <-
+	make_bbox(lon = c(min(leo$LONGITUDE_X), max(leo$LONGITUDE_X)),
+						lat = c(min(leo$LATITUDE_Y)-2.5, max(leo$LATITUDE_Y)+2.5),
+						f = 0.14)
+
+# Création carte
+southamerica <-
+	get_map(location = sbbox,
+					zoom = 7,
+					maptype = "terrain")
+southamerica_map = ggmap(southamerica) + theme_void()
+
+#
+map_with_leo <- southamerica_map +
+	geom_point(
+		data = leo,
+		aes(
+			x = LONGITUDE_X,
+			y = LATITUDE_Y,
+			text = paste0(SPECIES, "\nCatégorie IUCN : ", redlistCategory)
+		),
+		col = "black",
+		size = .8
+	) +
+	theme (legend.position = "none") +
+	scale_color_manual(values = c(
+		"#B3343D",
+		"#CF6B48",
+		"#E89E4A",
+		"#FFCF45",
+		"#438A32",
+		"#C9C9C9"
+	)) +
+	theme(
+		axis.text.x = element_blank(),
+		axis.text.y = element_blank(),
+		axis.title.x = element_blank(),
+		axis.title.y = element_blank(),
+		axis.line.x = element_blank(),
+		axis.line.y = element_blank()
+	)
+
+
+ggplotly(p = map_with_leo, tooltip = "text") 
+```
+

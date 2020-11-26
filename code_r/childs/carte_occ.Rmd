@@ -1,13 +1,4 @@
 ```{r carte_occ}
-pal_iucn <- palette(c(
-		"#B3343D", # "Critically Endangered",
-		"#CF6B48", # "Endangered",
-		"#E89E4A", # "Vulnerable",
-		"#FFCF45", # "Near Threatened",
-		"#438A32", # "Least Concern",
-		"#C9C9C9"  # "Data Deficient",
-		))
-
 # Emplacement
 sbbox <-
 	make_bbox(lon = c(min(occ$LONGITUDE_X)-2, max(occ$LONGITUDE_X))+2,
@@ -17,7 +8,7 @@ sbbox <-
 # Création de la carte vide
 southamerica <-
 	get_map(location = sbbox,
-					zoom = 7,
+					zoom = 6,
 					maptype = "terrain")
 southamerica_map = ggmap(southamerica) + theme_void()
 
@@ -43,8 +34,16 @@ map_with_species <- southamerica_map +
 		axis.line.x = element_blank(),
 		axis.line.y = element_blank()
 	) +
-	scale_color_manual(values = pal_iucn)
+	scale_color_manual(values = c(
+		"#B3343D", # "Critically Endangered",
+		"#CF6B48", # "Endangered",
+		"#E89E4A", # "Vulnerable",
+		"#FFCF45", # "Near Threatened",
+		"#438A32", # "Least Concern",
+		"#C9C9C9"  # "Data Deficient",
+		))
 
 ggplotly(p = map_with_species, tooltip = "text") %>% 
-	layout(showlegend = TRUE, legend = list(orientation = 'h', y = 100, x = 0))
+	layout(showlegend = TRUE, 
+				 legend = list(orientation = 'h', y = -100, x = 0))
 ```

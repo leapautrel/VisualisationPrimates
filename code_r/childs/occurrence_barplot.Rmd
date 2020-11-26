@@ -1,4 +1,4 @@
-```{r occurrence_barplot, fig.height = 7.5, fig.width = 6}
+```{r occurrence_barplot, fig.height = 10, fig.width = 8}
 data_barplot <- occ %>% 
   group_by(SPECIES) %>% 
 	summarise(n = n()) %>%
@@ -13,7 +13,7 @@ species_occurrences[23:26] <- paste(species_occurrences[23:26], "  ")
 species_occurrences[27] <- paste(species_occurrences[27], "   ")
 
 
-data_barplot %>% 
+ggplot_occurrence <- data_barplot %>% 
 	ggplot(aes(x = SPECIES, y = n, fill = FAMILY)) +
 	geom_bar(stat = "identity")+
   coord_flip()+
@@ -26,9 +26,17 @@ data_barplot %>%
 		axis.title.x = element_blank(),
 		axis.title.y = element_blank(),
 		legend.position = c(0.8, 0.3),
-		axis.text.y = element_text(size = 15, family = "D-DIN Condensed", face = "bold"),
-		legend.text = element_text(size = 15, family = "D-DIN Condensed", face = "bold"),
+		axis.text.y = element_text(size = 20, family = "D-DIN Condensed", face = "bold"),
+		legend.text = element_text(size = 21, family = "D-DIN Condensed", face = "bold"),
 		legend.title = element_blank()
 	)
+
+ggplot_occurrence
+# ggplotly(ggplot_occurrence) %>%
+# 	layout(legend = list(
+# 		x = 0.5,
+# 		y = 0.1,
+# 		font = list(family = "Arial Narrow", size = 20, face = "bold")
+# 	))
 ```
 

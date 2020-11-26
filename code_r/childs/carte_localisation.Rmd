@@ -1,11 +1,12 @@
-```{r}
+```{r, fig.width=7, fig.height=2}
 sbbox2 <- make_bbox(
-	lon = c(min(occ$LONGITUDE_X) - 25, max(occ$LONGITUDE_X)) + 25,
-	lat = c(min(occ$LATITUDE_Y)-2, max(occ$LATITUDE_Y))+2,
-	f = 0.5)
+	lon = c(min(occ$LONGITUDE_X) - 90, max(occ$LONGITUDE_X)) + 90,
+	lat = c(min(occ$LATITUDE_Y), max(occ$LATITUDE_Y)),
+	f = 0.4)
 
 # Création de la carte vide
-southamerica2 <- get_map(location = sbbox2, zoom = 4, maptype = "terrain")
+southamerica2 <- get_map(location = sbbox2, zoom = 3,
+												 maptype = "terrain")
 
 # Ajout du rectangle rouge
 xy <-

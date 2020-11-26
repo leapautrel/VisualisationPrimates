@@ -1,0 +1,34 @@
+```{r repartition_leontopithecus_caissara}
+leo2 <- occurrence %>% 
+	select(SPECIES, ANNUAL_RAIN, ALTITUDE) %>% 
+	filter(SPECIES == "Leontopithecus caissara")
+
+plot_leo <- leo2 %>%
+	ggplot() +
+	aes(
+		x = ANNUAL_RAIN ,
+		y = ALTITUDE,
+		text = paste0("", "Pluviométrie annuelle (mm)",  "\n", "Altitude (m)")
+	) +
+	geom_point() +
+	labs(x = "Pluviométrie annuelle (mm)") +
+	labs(y = "Altitude (m)") +
+	theme(
+		panel.background = element_rect(
+			fill = "#D9EBE8",
+			colour = "#D9EBE8",
+			size = 3,
+			linetype = "solid"
+		),
+		panel.grid.major = element_line(
+			size = 0.8,
+			linetype = 'solid',
+			colour = "white"
+		),
+		panel.grid.minor = element_blank(),
+		plot.background = element_rect(fill = "#D9EBE8", colour = "#D9EBE8", size = 3)
+	)
+
+ggplotly(plot_leo, tooltip = "text")
+```
+

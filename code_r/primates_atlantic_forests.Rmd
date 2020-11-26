@@ -3,7 +3,20 @@ title: "Conservation des primates de la forêt atlantique d'Amérique du Sud"
 output: 
   flexdashboard::flex_dashboard:
     theme: yeti
+    vertical_layout: fill
 ---
+
+
+<!-- CSS pour la forme du dashboard -->
+<style>
+
+.navbar{
+	background-color: #70333F;
+	border-color:#70333F;
+}
+
+</style>
+
 
 ```{r library_packages, include=FALSE}
 # Packages
@@ -128,36 +141,30 @@ especes_vulnerable <- nrow(
 Description des primates présents
 =====================================  
 
-Column {data-width=250}
+Column {data-width=300}
 -------------------------------------
 
-### 26 espèces, de 7 familles de primates 
+### 26 espèces, de 7 familles de primates {data-height=780, .no-padding}
 
 ```{r occurrence_barplot, child = 'childs/occurrence_barplot.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
-### Localisation de la forêt atlantique
+### Localisation de la forêt atlantique {data-height=220, .no-padding}
 
 ```{r carte_localisation, child = 'childs/carte_localisation.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
 
-Column {data-width=520}
+Column {data-width=500}
 -------------------------------------
 
-### Distribution
+### Distribution {.no-padding}
 ```{r carte_occ, child = 'childs/carte_occ.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
 
-Column {data-width=230}
+Column {data-width=200}
 -------------------------------------
-
-### Espèces autochtones
-
-```{r}
-valueBox(nb_especes_autochtones, icon = "globe-americas", color = "#DAC5B8")
-```
 
 ### Espèces vulnérables (VU)
 
@@ -186,7 +193,11 @@ valueBox(nrow(especes_CR), icon = "exclamation-triangle", color = "#B3343D")
 * Leontopithecus caissara
 * Sapajus xanthosternos
 
+### Source des données
 
+**ATLANTIC‐PRIMATES: a dataset of communities and occurrences of primates in the Atlantic Forests of South America**
+
+Laurence Culot *et al.*, 2018
 
 Types de zones à protéger
 =====================================  
@@ -199,16 +210,53 @@ Column
 ```
 
 
-
 Leontopithecus caissara
 =====================================
 
 Column
 -------------------------------------
 
-### Leontopithecus caissara, le tamarin-lion à face noire
+### Statut de conservation UICN {data-height=130}
+
+```{r echo = F, out.width = '100%'}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Status_iucn3.1_CR-fr.svg/366px-Status_iucn3.1_CR-fr.svg.png")
+```
+
+### Aire de répartition
+
+```{r repartition_leontopithecus_caissara, child = 'childs/repartition_leontopithecus_caissara.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+
+### Aires à protéger pour sauvegarder l'espèce {data-height=250}
+
+Le tamarin-lion à face noire a été observé dans des **plaines** avec une **pluviométrie élevée**. Il se retrouve principalement aux environs de la **baie de Paranaguá**. Pour conserver cette espèce, c'est cette zone géographique qu'il faut protéger. Plusieurs espaces sont déjà protégés dans ces lieux. 
+
+Son aire de répartition actuelle est d'environ 170 km².
+
+### Photographie {data-height=90}
+*Everton Leonardi*
+
+
+Column
+-------------------------------------
+
+### Leontopithecus caissara, le tamarin-lion à face noire {data-height=900}
 
 ```{r echo = F, out.width = '100%'}
 knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Leontopithecus_caissara.jpg/800px-Leontopithecus_caissara.jpg")
 ```
+
+<!-- ### Statut de conservation UICN {data-height=100} -->
+
+<!-- ```{r echo = F, out.width = '100%'} -->
+<!-- ``` -->
+
+Column
+-------------------------------------
+
+### Distribution {.no-padding}
+
+```{r leontopithecus_caissara, child = 'childs/carte_leontopithecus_caissara.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```
+
 
