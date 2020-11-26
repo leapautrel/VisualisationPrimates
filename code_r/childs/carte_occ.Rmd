@@ -10,7 +10,7 @@ pal_iucn <- palette(c(
 
 # Emplacement
 sbbox <-
-	make_bbox(lon = c(min(occ$LONGITUDE_X)-10, max(occ$LONGITUDE_X))+10,
+	make_bbox(lon = c(min(occ$LONGITUDE_X)-2, max(occ$LONGITUDE_X))+2,
 						lat = c(min(occ$LATITUDE_Y), max(occ$LATITUDE_Y)),
 						f = 0.01)
 
@@ -46,5 +46,5 @@ map_with_species <- southamerica_map +
 	scale_color_manual(values = pal_iucn)
 
 ggplotly(p = map_with_species, tooltip = "text") %>% 
-	layout(showlegend = TRUE, legend = list(orientation = 'h', y = -100, x = 0))
+	layout(showlegend = TRUE, legend = list(orientation = 'h', y = 100, x = 0))
 ```

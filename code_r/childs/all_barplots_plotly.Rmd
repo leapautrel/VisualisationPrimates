@@ -106,21 +106,20 @@ plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
 		colors = new_pal_iucn
 	) %>%
 		layout(xaxis = axe_x_list,
-					 yaxis = axe_y_list)
-					 # paper_bgcolor = background_color,
-					 # plot_bgcolor = background_color
+					 yaxis = axe_y_list,
+					 paper_bgcolor = background_color,
+					 plot_bgcolor = background_color)
 	
 	return(figure)
 }
 
 
 
-
 # On créé les plot ----
 # Pluvio = Humide
-plot_h_p <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Plaine", legende_bool = TRUE)
+plot_h_p <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Plaine")
 plot_h_b <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
-plot_h_h <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Haute Montagne")
+plot_h_h <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Haute Montagne", legende_bool = TRUE)
 
 # Pluvio = Moyen
 plot_m_p <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Plaine")
@@ -132,10 +131,18 @@ plot_s_p <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Plaine")
 plot_s_b <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
 plot_s_h <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
 
-all_plots = list(plot_h_p, plot_h_b, plot_h_h, 
-								 plot_m_p, plot_m_b, plot_m_h, 
-								 plot_s_p, plot_s_b, plot_s_h)
+# tous les plots 
+browsable(div(style = "display: flex; flex-wrap: wrap; justify-content: center",
+    div(plot_s_h, style = "width: 30%;"),
+    div(plot_m_h, style = "width: 30%;"),
+    div(plot_h_h, style = "width: 30%;"),
+    div(plot_s_b, style = "width: 30%;"),
+    div(plot_m_b, style = "width: 30%;"),
+    div(plot_h_b, style = "width: 30%;"),
+    div(plot_s_p, style = "width: 30%;"),
+    div(plot_m_p, style = "width: 30%;"),
+    div(plot_h_p, style = "width: 30%;")))
 
-plotly::subplot(all_plots, nrows = 3)
+
 ``` 
 

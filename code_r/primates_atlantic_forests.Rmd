@@ -1,5 +1,5 @@
 ---
-title: "Répartition de primates dans les forêts atlantique d'Amérique du Sud"
+title: "Conservation des primates de la forêt atlantique d'Amérique du Sud"
 output: 
   flexdashboard::flex_dashboard:
     theme: yeti
@@ -13,6 +13,7 @@ library(dplyr) ; options(dplyr.summarise.inform = FALSE)
 library(grid) ; library(gridExtra) ; library(ggpubr)
 library(plotly)
 library(ggmap)
+library(htmltools)
 ```
 
 
@@ -25,6 +26,7 @@ occurrence$SPECIES <-
 
 # Sélection de colonnes
 occ <- occurrence %>% select(SPECIES,
+														 SP_ORIGIN,
 														 ALTITUDE,
 														 ANNUAL_TEMP,
 														 ANNUAL_RAIN,
@@ -78,49 +80,109 @@ occ$redlistCategory = factor(
 )
 ```
 
-Exploration
-=====================================  
 
-Column {data-width=300}
--------------------------------------
+```{r find_data, include=FALSE}
+nb_especes_autochtones <- nrow(occ %>% 
+	select(SPECIES, SP_ORIGIN) %>% 
+	filter(SP_ORIGIN == "Autochtone") %>% 
+	mutate(SPECIES = factor(SPECIES)) %>% 
+	distinct(SPECIES, SP_ORIGIN))
 
-### Espèces de primates
+especes_menacees <-  occ %>% 
+	select(SPECIES, redlistCategory) %>% 
+	filter(
+		redlistCategory == "Critically Endangered" |
+			redlistCategory == "Endangered"  |
+			redlistCategory == "Vulnerable"
+	) %>%
+	mutate(SPECIES = factor(SPECIES)) %>% 
+	distinct(SPECIES)
+	
+especes_CR <- occ %>% 
+	select(SPECIES, redlistCategory) %>% 
+	filter(redlistCategory == "Critically Endangered") %>% 
+	mutate(SPECIES = factor(SPECIES)) %>% 
+	distinct(SPECIES)
 
-```{r}
-nb_espces <- 26
-nb_familles <- nrow(occurrence %>%
-											mutate(FAMILY = gsub(" .*$", "", SPECIES)) %>%
-											select(FAMILY) %>%
-											distinct(FAMILY))
-valueBox(nb_espces, icon = "tree")
+especes_endangered <- nrow(
+	occ %>%
+		select(SPECIES, redlistCategory) %>%
+		filter(redlistCategory == "Endangered") %>%
+		mutate(SPECIES = factor(SPECIES)) %>%
+		distinct(SPECIES)
+)
+
+especes_vulnerable <- nrow(
+	occ %>%
+		select(SPECIES, redlistCategory) %>%
+		filter(redlistCategory == "Vulnerable") %>%
+		mutate(SPECIES = factor(SPECIES)) %>%
+		distinct(SPECIES)
+)
+
 ```
 
+Description des primates présents
+=====================================  
 
-### Occurence des différentes espèces
+Column {data-width=250}
+-------------------------------------
+
+### 26 espèces, de 7 familles de primates 
 
 ```{r occurrence_barplot, child = 'childs/occurrence_barplot.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
- 
-<!-- ### Chart 3 -->
 
-<!-- ```{r} -->
-<!-- articles <- computeArticles() -->
-<!-- valueBox(articles, icon = "fa-pencil") -->
-<!-- ``` -->
+### Localisation de la forêt atlantique
 
-### Localisation
 ```{r carte_localisation, child = 'childs/carte_localisation.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
 
-Column {data-width=700}
+Column {data-width=520}
 -------------------------------------
     
 ### Distribution
 ```{r carte_occ, child = 'childs/carte_occ.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
-Page 2
+
+Column {data-width=230}
+-------------------------------------
+
+### Espèces autochtones
+
+```{r}
+valueBox(nb_especes_autochtones, icon = "globe-americas", color = "#DAC5B8")
+```
+
+### Espèces menacées (CR, EN, VU)
+
+```{r}
+valueBox(nrow(especes_menacees), icon = "cloud", color = "#5E1315")
+```
+
+### 6 espèces en danger critique (CR)
+
+```{r}
+knitr::kable(especes_CR)
+```
+
+### Espèces en danger (EN)
+
+```{r}
+valueBox(especes_endangered, icon = "exclamation-triangle", color = "#CF6B48")
+```
+
+### Espèces vulnérables (VU)
+
+```{r}
+valueBox(especes_vulnerable, icon = "exclamation-triangle", color = "#E89E4A")
+```
+
+
+
+Types de zones à protéger
 =====================================  
 
 Column
