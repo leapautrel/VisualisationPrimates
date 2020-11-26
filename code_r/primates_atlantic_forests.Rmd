@@ -14,8 +14,11 @@ library(grid) ; library(gridExtra) ; library(ggpubr)
 library(plotly)
 library(ggmap)
 library(htmltools)
-```
 
+# Fonts
+windowsFonts("Arial Narrow" = windowsFont("Arial Narrow"))
+windowsFonts("D-DIN Condensed" = windowsFont("D-DIN Condensed"))
+```
 
 ```{r import_data, include=FALSE}
 occurrence <- read.csv("./dataset/ATLANTIC-PR_Occurrence.csv", header = TRUE, sep = ";")
@@ -141,7 +144,7 @@ Column {data-width=250}
 
 Column {data-width=520}
 -------------------------------------
-    
+
 ### Distribution
 ```{r carte_occ, child = 'childs/carte_occ.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
@@ -156,16 +159,10 @@ Column {data-width=230}
 valueBox(nb_especes_autochtones, icon = "globe-americas", color = "#DAC5B8")
 ```
 
-### Espèces menacées (CR, EN, VU)
+### Espèces vulnérables (VU)
 
 ```{r}
-valueBox(nrow(especes_menacees), icon = "cloud", color = "#5E1315")
-```
-
-### 6 espèces en danger critique (CR)
-
-```{r}
-knitr::kable(especes_CR)
+valueBox(especes_vulnerable, icon = "exclamation-triangle", color = "#E89E4A")
 ```
 
 ### Espèces en danger (EN)
@@ -174,11 +171,20 @@ knitr::kable(especes_CR)
 valueBox(especes_endangered, icon = "exclamation-triangle", color = "#CF6B48")
 ```
 
-### Espèces vulnérables (VU)
+### Espèces en danger critique (CR)
 
 ```{r}
-valueBox(especes_vulnerable, icon = "exclamation-triangle", color = "#E89E4A")
+valueBox(nrow(especes_CR), icon = "exclamation-triangle", color = "#B3343D")
 ```
+
+### Les 6 espèces en danger critique 
+
+* Brachyteles arachnoides
+* Brachyteles hypoxanthus
+* Callicebus barbarabrownae
+* Callithrix flaviceps
+* Leontopithecus caissara
+* Sapajus xanthosternos
 
 
 
@@ -191,3 +197,18 @@ Column
 ### Distribution des espèces dans les différents types de milieux
 ```{r all_barplots_plotly, child = 'childs/all_barplots_plotly.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
+
+
+
+Leontopithecus caissara
+=====================================
+
+Column
+-------------------------------------
+
+### Leontopithecus caissara, le tamarin-lion à face noire
+
+```{r echo = F, out.width = '100%'}
+knitr::include_graphics("https://upload.wikimedia.org/wikipedia/commons/thumb/6/6f/Leontopithecus_caissara.jpg/800px-Leontopithecus_caissara.jpg")
+```
+
