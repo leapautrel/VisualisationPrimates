@@ -134,7 +134,7 @@ Column
 ```{r}
 f_sep_donnees <- function(donnees, alti, pluvio) {
   
-  # Sélection des données pour pluvio et alti
+  # S?lection des donn?es pour pluvio et alti
   dta_plot <- donnees %>%
     filter(ANNUAL_RAIN == pluvio & ALTITUDE == alti) %>%
     group_by(SPECIES, ALTITUDE, ANNUAL_RAIN, redlistCategory) %>%
@@ -145,15 +145,15 @@ f_sep_donnees <- function(donnees, alti, pluvio) {
                             levels = dta_plot$SPECIES[order(dta_plot$n, 
                                                             decreasing = TRUE)])
   
-  # Nouvelle colonne avec seulement les levels dans ce sous jeu de données (redlistCategory a tous les levels)
+  # Nouvelle colonne avec seulement les levels dans ce sous jeu de donn?es (redlistCategory a tous les levels)
   dta_plot$redlistCategory2 <- factor(dta_plot$redlistCategory)
   
   return(dta_plot)
 }
-# Fonction plot_palette_specifique pour récupérer la palette de couleur adaptée au nombre de levels ----
+# Fonction plot_palette_specifique pour r?cup?rer la palette de couleur adapt?e au nombre de levels ----
 plot_palette_specifique <- function(dta_plot){
   
-  # Définition de la palette de couleurs complète
+  # D?finition de la palette de couleurs compl?te
   pal_iucn <- palette(c(
     "#B3343D", # "Critically Endangered",
     "#CF6B48", # "Endangered",
@@ -168,7 +168,7 @@ plot_palette_specifique <- function(dta_plot){
     # Initialisation
     new_pal_values = c()
     
-    # Boucle pour récupérer les bons levels
+    # Boucle pour r?cup?rer les bons levels
     for (rl2 in 1:length(levels(dta_plot$redlistCategory2))) {
       for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
         if ((levels(dta_plot$redlistCategory2)[rl2]) == levels(dta_plot$redlistCategory)[rl1]) {
@@ -191,12 +191,12 @@ plot_palette_specifique <- function(dta_plot){
   }
   return(new_pal)
 }
-# Fonction plot_a_p pour obtenir un graphique pour chaque type de données ----
+# Fonction plot_a_p pour obtenir un graphique pour chaque type de donn?es ----
 plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
   
-  # On récupère les données spécifiques pour alti et pluvio
+  # On r?cup?re les donn?es sp?cifiques pour alti et pluvio
   dta_plot <- f_sep_donnees(donnees, alti, pluvio)
-  # On récupère la palette de couleurs
+  # On r?cup?re la palette de couleurs
   new_pal_iucn <- plot_palette_specifique(dta_plot)
   
   # On ajoute des couleurs de fond selon la valeur de pluvio
@@ -220,7 +220,7 @@ plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
     else if(alti == "Haute Montagne"){background_color = "#D5E6E3"
     }}
   
-  # On créé des variables de style pour layout
+  # On cr?? des variables de style pour layout
   axe_x_list <- list(
     title = "",
     zeroline = FALSE,
@@ -264,7 +264,7 @@ plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
   
   return(figure)
 }
-# On créé les plot ----
+# On cr?? les plot ----
 # Pluvio = Humide
 plot_h_p <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Plaine")
 plot_h_b <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
@@ -277,24 +277,50 @@ plot_m_h <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
 plot_s_p <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Plaine")
 plot_s_b <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
 plot_s_h <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
-library(htmltools)
-s <- "width: 31%;height: 9em;display: flex;border: solid white; justify-content: center;"
-browsable(div(style = "display: flex; flex-wrap: wrap; justify-content: center;",
-    div("Haute Montagne", style = "background: #F0F0F0; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;text-orientation: mixed;transform: rotate(180deg);"),
-    div(plot_s_h, style = s),
-    div(plot_m_h, style = s),
-    div(plot_h_h, style = s),
-    div("Basse Montagne", style = "background: #F2F2F2; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);"),
-    div(plot_s_b, style = s),
-    div(plot_m_b, style = s),
-    div(plot_h_b, style = s),
-    div("Plaine", style = "background: #F5F5F5; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);"),
-    div(plot_s_p, style = s),
-    div(plot_m_p, style = s),
-    div(plot_h_p, style = s),
-    div(style = "width : 3.8em;"),
-    div("Sec", style = "background: #E0D5C8; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"),
-    div("Moyen", style = "background: #EAEBE4; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"),
-    div("Humide", style = "background: #D9EBE8; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;")))
+
+
+
+s <- "width: 31%;
+	height: 14em;
+	display: flex;
+	border: solid white;
+	justify-content: center;"
+
+s_alti <- "width : 3.8em; height: 14em; display: flex;border: solid white; 
+	text-align: center; font-family:Arial, Helvetica, sans-serif;
+	font-weight:bold;letter-spacing:5px; 
+	justify-content: center;
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	transform: rotate(180deg);"
+
+s_pluvio <- "width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"
+
+browsable(
+	div(
+		style = "display: flex; flex-wrap: wrap; justify-content: center;",
+		
+		div("Haute Montagne", style = paste0("background: #F0F0F0;", s_alti)),
+		div(plot_s_h, style = s),
+		div(plot_m_h, style = s),
+		div(plot_h_h, style = s),
+		
+		div("Basse Montagne", style = paste0("background: #F2F2F2;", s_alti)),
+		div(plot_s_b, style = s),
+		div(plot_m_b, style = s),
+		div(plot_h_b, style = s),
+		
+		div("Plaine", style = paste0("background: #F5F5F5;", s_alti)),
+		div(plot_s_p, style = s),
+		div(plot_m_p, style = s),
+		div(plot_h_p, style = s),
+		
+		
+		div(style = "width : 3.8em;"),
+		div("Sec", style = paste0("background: #E0D5C8;",s_pluvio)),
+		div("Moyen", style = paste0("background: #EAEBE4;",s_pluvio)),
+		div("Humide", style = paste0("background: #D9EBE8; ",s_pluvio))
+	)
+)
 
 ```

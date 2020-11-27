@@ -206,7 +206,7 @@ Column
 -------------------------------------
 
 ### Distribution des espèces dans les différents types de milieux
-```{r all_barplots_plotly, child = 'childs/all_barplots_plotly.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
+```{r barplots_milieux, child = 'childs/barplots_milieux.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
 

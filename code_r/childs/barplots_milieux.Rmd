@@ -1,0 +1,191 @@
+```{r barplots_milieux}
+f_sep_donnees <- function(donnees, alti, pluvio) {
+  
+  # S?lection des donn?es pour pluvio et alti
+  dta_plot <- donnees %>%
+    filter(ANNUAL_RAIN == pluvio & ALTITUDE == alti) %>%
+    group_by(SPECIES, ALTITUDE, ANNUAL_RAIN, redlistCategory) %>%
+    summarise(n = n())
+  
+  # Tri par ordre croissant
+  dta_plot$SPECIES = factor(dta_plot$SPECIES,
+                            levels = dta_plot$SPECIES[order(dta_plot$n, 
+                                                            decreasing = TRUE)])
+  
+  # Nouvelle colonne avec seulement les levels dans ce sous jeu de donn?es (redlistCategory a tous les levels)
+  dta_plot$redlistCategory2 <- factor(dta_plot$redlistCategory)
+  
+  return(dta_plot)
+}
+# Fonction plot_palette_specifique pour r?cup?rer la palette de couleur adapt?e au nombre de levels ----
+plot_palette_specifique <- function(dta_plot){
+  
+  # D?finition de la palette de couleurs compl?te
+  pal_iucn <- palette(c(
+    "#B3343D", # "Critically Endangered",
+    "#CF6B48", # "Endangered",
+    "#E89E4A", # "Vulnerable",
+    "#FFCF45", # "Near Threatened",
+    "#438A32", # "Least Concern",
+    "#C9C9C9"  # "Data Deficient",
+  ))
+  
+  # Si 2 ou plus levels : on construit une palette.
+  if (length(levels(dta_plot$redlistCategory2)) > 1) {
+    # Initialisation
+    new_pal_values = c()
+    
+    # Boucle pour r?cup?rer les bons levels
+    for (rl2 in 1:length(levels(dta_plot$redlistCategory2))) {
+      for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+        if ((levels(dta_plot$redlistCategory2)[rl2]) == levels(dta_plot$redlistCategory)[rl1]) {
+          new_pal_values = c(new_pal_values, pal_iucn[rl1])
+        }
+      }
+    }
+    
+    # Transformation au format palette
+    new_pal = palette(value = new_pal_values)
+  }
+  
+  # Si 1 level seulement : on renvoie une couleur unique.
+  else if (length(levels(dta_plot$redlistCategory2)) == 1) {
+    for (rl1 in 1:length(levels(dta_plot$redlistCategory))) {
+      if ((levels(dta_plot$redlistCategory2)[1]) == levels(dta_plot$redlistCategory)[rl1]) {
+        new_pal = pal_iucn[rl1]
+      }
+    }
+  }
+  return(new_pal)
+}
+# Fonction plot_a_p pour obtenir un graphique pour chaque type de donn?es ----
+plot_a_p <- function(donnees, alti, pluvio, legende_bool = FALSE){
+  
+  # On r?cup?re les donn?es sp?cifiques pour alti et pluvio
+  dta_plot <- f_sep_donnees(donnees, alti, pluvio)
+  # On r?cup?re la palette de couleurs
+  new_pal_iucn <- plot_palette_specifique(dta_plot)
+  
+  # On ajoute des couleurs de fond selon la valeur de pluvio
+  if (pluvio == "Sec"){if(alti == "Plaine"){background_color = "#EDE3D8"}
+    else if(alti == "Basse Montagne"){
+    background_color = "#E0D5C8"
+    }
+    else if(alti == "Haute Montagne"){background_color = "#CFC0B0"
+    }
+  }
+  else if (pluvio == "Moyen"){if(alti == "Plaine"){background_color = "#EEF0E6"}
+    else if(alti == "Basse Montagne"){
+    background_color = "#EAEBE4"
+    }
+    else if(alti == "Haute Montagne"){background_color = "#E5E8D3"
+    }}
+  else if (pluvio == "Humide"){if(alti == "Plaine"){background_color = "#DAEDEA"}
+    else if(alti == "Basse Montagne"){
+    background_color = "#D9EBE8"
+    }
+    else if(alti == "Haute Montagne"){background_color = "#D5E6E3"
+    }}
+  
+  # On cr?? des variables de style pour layout
+  axe_x_list <- list(
+    title = "",
+    zeroline = FALSE,
+    showline = FALSE,
+    showticklabels = FALSE,
+    showgrid = FALSE
+  )
+  axe_y_list <- list(
+    range = c(0, 600),
+    title = "",
+    zeroline = FALSE,
+    showline = FALSE,
+    showticklabels = FALSE,
+    showgrid = FALSE
+  )
+  
+  # On construit la figure
+  l <- list(
+  font = list(
+    family = "sans-serif",
+    size = 5,
+    color = "#000"),
+  bgcolor = "white",     yanchor="top",
+    xanchor="left", x = 0, y = 1.5, orientation="h")
+
+  figure = plot_ly(
+    dta_plot,
+    type = 'bar',
+    x =  ~ SPECIES,
+    y =  ~ n,
+    color =  ~ redlistCategory,
+    legendgroup = ~ redlistCategory,
+    showlegend = legende_bool,
+    colors = new_pal_iucn
+  ) %>%
+    layout(xaxis = axe_x_list,
+           yaxis = axe_y_list,
+  paper_bgcolor = background_color,
+  plot_bgcolor = background_color,
+  legend = l)
+  
+  return(figure)
+}
+# On cr?? les plot ----
+# Pluvio = Humide
+plot_h_p <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Plaine")
+plot_h_b <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Basse Montagne")
+plot_h_h <- plot_a_p(donnees = occ, pluvio = "Humide", alti = "Haute Montagne", legende_bool = TRUE)
+# Pluvio = Moyen
+plot_m_p <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Plaine")
+plot_m_b <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Basse Montagne")
+plot_m_h <- plot_a_p(donnees = occ, pluvio = "Moyen", alti = "Haute Montagne")
+# Pluvio = Sec
+plot_s_p <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Plaine")
+plot_s_b <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
+plot_s_h <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
+
+
+s <- "width: 31%;
+	height: 14em;
+	display: flex;
+	border: solid white;
+	justify-content: center;"
+
+s_alti <- "width : 3.8em; height: 14em; display: flex;border: solid white; 
+	text-align: center; font-family:Arial, Helvetica, sans-serif;
+	font-weight:bold;letter-spacing:5px; 
+	justify-content: center;
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+	transform: rotate(180deg);"
+
+s_pluvio <- "width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"
+
+browsable(
+	div(
+		style = "display: flex; flex-wrap: wrap; justify-content: center;",
+		
+		div("Haute Montagne", style = paste0("background: #F0F0F0;", s_alti)),
+		div(plot_s_h, style = s),
+		div(plot_m_h, style = s),
+		div(plot_h_h, style = s),
+		
+		div("Basse Montagne", style = paste0("background: #F2F2F2;", s_alti)),
+		div(plot_s_b, style = s),
+		div(plot_m_b, style = s),
+		div(plot_h_b, style = s),
+		
+		div("Plaine", style = paste0("background: #F5F5F5;", s_alti)),
+		div(plot_s_p, style = s),
+		div(plot_m_p, style = s),
+		div(plot_h_p, style = s),
+		
+		
+		div(style = "width : 3.8em;"),
+		div("Sec", style = paste0("background: #E0D5C8;",s_pluvio)),
+		div("Moyen", style = paste0("background: #EAEBE4;",s_pluvio)),
+		div("Humide", style = paste0("background: #D9EBE8; ",s_pluvio))
+	)
+)
+```
