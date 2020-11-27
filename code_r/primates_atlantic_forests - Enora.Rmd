@@ -278,24 +278,26 @@ plot_s_p <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Plaine")
 plot_s_b <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Basse Montagne")
 plot_s_h <- plot_a_p(donnees = occ, pluvio = "Sec", alti = "Haute Montagne")
 library(htmltools)
-s <- "width: 31%;height: 9em;border: solid white; justify-content: left;padding: 0; 
-   margin: 0;;justify-self: left;"
+library(stringr)
+w <- "width: 31%;"
+h <- "height: 9em;"
+s <- str_c(str_c("border: solid white; justify-content: left;padding: 0;margin: 0;;justify-self: left;", w), h)
 browsable(div(style = "display: flex; flex-wrap: wrap; justify-content: center;border-collapse: collapse;",
-    div("Haute Montagne", style = "background: #F0F0F0; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;text-orientation: mixed;transform: rotate(180deg);"),
+    div("Haute Montagne", style = str_c("background: #F0F0F0; width : 3.8em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;text-orientation: mixed;transform: rotate(180deg);", h)),
     div(plot_s_h, style = s),
     div(plot_m_h, style = s),
     div(plot_h_h, style = s),
-    div("Basse Montagne", style = "background: #F2F2F2; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);"),
+    div("Basse Montagne", style = str_c("background: #F2F2F2; width : 3.8em;display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);", h)),
     div(plot_s_b, style = s),
     div(plot_m_b, style = s),
     div(plot_h_b, style = s),
-    div("Plaine", style = "background: #F5F5F5; width : 3.8em; height: 9em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);"),
+    div("Plaine", style = str_c("background: #F5F5F5; width : 3.8em; display: flex;border: solid white; text-align: center;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;writing-mode: vertical-rl;transform: rotate(180deg);", h)),
     div(plot_s_p, style = s),
     div(plot_m_p, style = s),
     div(plot_h_p, style = s),
     div(style = "width : 3.8em;"),
-    div("Sec", style = "background: #E0D5C8; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"),
-    div("Moyen", style = "background: #EAEBE4; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;"),
-    div("Humide", style = "background: #D9EBE8; width : 31%; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;")))
+    div("Sec", style = str_c("background: #E0D5C8; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;", w)),
+    div("Moyen", style = str_c("background: #EAEBE4; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;", w)),
+    div("Humide", style = str_c("background: #D9EBE8; height: 1.8em; display: flex;border: solid white;font-family:Arial, Helvetica, sans-serif;font-weight:bold;text-align:center;letter-spacing:5px; justify-content: center;", w))))
 
 ```
