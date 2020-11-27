@@ -144,7 +144,7 @@ Description des primates présents
 Column {data-width=300}
 -------------------------------------
 
-### 26 ESPECES DE 7 FAMILLES DE PRIMATES {data-height=780, .no-padding}
+### OCCURRENCES DES 26 ESPECES DE 7 FAMILLES DE PRIMATES {data-height=780, .no-padding}
 
 ```{r occurrence_barplot, child = 'childs/occurrence_barplot.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
