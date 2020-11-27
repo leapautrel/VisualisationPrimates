@@ -205,7 +205,7 @@ Types de zones à protéger
 Column
 -------------------------------------
 
-### Distribution des espèces dans les différents types de milieux
+### Distribution des espèces dans les différents types de milieux, en fonction de la pluviométrie et de l'altitude {.no-padding}
 ```{r barplots_milieux, child = 'childs/barplots_milieux.Rmd', eval = TRUE,  message = FALSE, warning=FALSE}
 ```
 
